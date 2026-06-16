@@ -15,6 +15,14 @@ npm run dev
 npm run check
 ```
 
+## 自动测试
+
+```bash
+npm run test:unit
+```
+
+`npm run check` 会一起执行类型检查、单元测试和生产构建。
+
 ## GitHub Pages 发布
 
 项目支持两种发布方式。
