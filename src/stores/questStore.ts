@@ -39,7 +39,7 @@ export const useQuestStore = defineStore("quests", () => {
   });
 
   const userApprovedTasks = computed(() =>
-    tasks.value.filter((task) => task.source === "玩家发布" && task.status === "approved"),
+    tasks.value.filter((task) => task.source === "用户发布" && task.status === "approved"),
   );
 
   const stats = computed(() => ({
@@ -63,7 +63,7 @@ export const useQuestStore = defineStore("quests", () => {
       category: payload.category,
       intensity: payload.intensity,
       status: "pending",
-      source: "玩家发布",
+      source: "用户发布",
       createdAt: Date.now(),
     };
 
@@ -139,7 +139,7 @@ export const useQuestStore = defineStore("quests", () => {
     persist();
   }
 
-  function resetDemo() {
+  function clearLocalProgress() {
     clearQuestSnapshot();
     const fresh = createInitialSnapshot();
     tasks.value = fresh.tasks;
@@ -180,7 +180,7 @@ export const useQuestStore = defineStore("quests", () => {
     drawQuest,
     completeQuest,
     setLightOnly,
-    resetDemo,
+    clearLocalProgress,
   };
 });
 

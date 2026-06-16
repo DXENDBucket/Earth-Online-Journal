@@ -6,7 +6,7 @@ import type {
   UserProfile,
 } from "@/types/quest";
 
-const STORE_KEY = "earth-online-journal-demo-v2";
+const STORE_KEY = "earth-online-journal-v1";
 
 export interface QuestStoreSnapshot {
   tasks: QuestTask[];
@@ -25,7 +25,7 @@ export function createInitialSnapshot(): QuestStoreSnapshot {
     },
     currentDrawId: "",
     user: {
-      name: "地球玩家 2049",
+      name: "地球旅人",
       handle: "EOJ-2049",
     },
   };

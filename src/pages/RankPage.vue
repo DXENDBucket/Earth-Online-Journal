@@ -2,51 +2,67 @@
   <section class="screen">
     <div class="screen-title">
       <p class="eyebrow">榜单</p>
-      <h1>本周地球经验</h1>
+      <h1>本周进度</h1>
     </div>
 
     <div class="rank-list">
-      <article
-        v-for="(item, index) in ranks"
-        :key="item.name"
-        class="rank-row"
-        :class="{ 'is-you': item.you }"
-      >
-        <div class="rank-number">{{ index + 1 }}</div>
+      <article class="rank-row is-you">
+        <div class="rank-number">1</div>
         <div>
-          <p class="rank-name">{{ item.name }}</p>
+          <p class="rank-name">我的本周经验</p>
           <div class="list-meta">
-            <span>{{ item.completed }} 完成</span>
-            <span>{{ item.published }} 入池</span>
+            <span>{{ doneThisWeek }} 个任务完成</span>
+            <span>{{ store.userApprovedTasks.length }} 张任务发布</span>
           </div>
         </div>
-        <strong class="rank-score">{{ item.score }}</strong>
+        <strong class="rank-score">{{ weeklyScore }}</strong>
+      </article>
+
+      <article class="rank-row">
+        <div class="rank-number">2</div>
+        <div>
+          <p class="rank-name">进行中的任务</p>
+          <div class="list-meta">
+            <span>{{ store.todoQuests.length }} 张任务卡正在等待完成</span>
+          </div>
+        </div>
+        <strong class="rank-score">{{ store.todoQuests.length }}</strong>
       </article>
     </div>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>公开排行</h2>
+      </div>
+      <div class="empty-state">
+        <strong>多人空间开放后，这里会显示大家的完成排行</strong>
+      </div>
+    </section>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { demoRanks } from "@/data/demoRanks";
 import { useQuestStore } from "@/stores/questStore";
 
 const store = useQuestStore();
 
-const ranks = computed(() => {
-  const userRank = {
-    name: `${store.user.name}（你）`,
-    completed: store.doneQuests.length,
-    published: store.userApprovedTasks.length,
-    you: true,
-  };
+const doneThisWeek = computed(() => {
+  const start = startOfWeek(new Date()).getTime();
 
-  return [...demoRanks, userRank]
-    .map((item) => ({
-      ...item,
-      score: item.completed * 10 + item.published * 4,
-    }))
-    .sort((a, b) => b.score - a.score);
+  return store.doneQuests.filter((quest) => {
+    return Boolean(quest.completedAt && quest.completedAt >= start);
+  }).length;
 });
+
+const weeklyScore = computed(() => doneThisWeek.value * 10 + store.userApprovedTasks.length * 4);
+
+function startOfWeek(date: Date) {
+  const result = new Date(date);
+  const day = result.getDay() || 7;
+  result.setHours(0, 0, 0, 0);
+  result.setDate(result.getDate() - day + 1);
+  return result;
+}
 </script>

@@ -3,16 +3,16 @@
     <section class="app-hero">
       <div class="hero-copy">
         <p class="eyebrow">Earth Online Journal</p>
-        <h1>地球 Online 任务池</h1>
-        <p class="hero-line">把现实世界当作开放地图，抽一张今天能完成的小任务。</p>
+        <h1>给今天抽一张现实任务</h1>
+        <p class="hero-line">把日常生活当作开放地图，接住一个小小的行动提示。</p>
         <div class="metric-row">
           <div class="metric">
             <strong>{{ stats.approved }}</strong>
-            <span>卡池</span>
+            <span>可抽任务</span>
           </div>
           <div class="metric">
             <strong>{{ stats.todo }}</strong>
-            <span>未完成</span>
+            <span>进行中</span>
           </div>
           <div class="metric">
             <strong>{{ stats.done }}</strong>
@@ -23,20 +23,20 @@
       <img class="hero-art" :src="questCardImage" alt="" />
     </section>
 
-    <SegmentTabs v-model="homeMode" label="发布接取" :options="homeOptions" />
+    <SegmentTabs v-model="homeMode" label="发布或接取任务" :options="homeOptions" />
 
     <section v-if="homeMode === 'draw'" class="panel">
       <div class="panel-head">
         <div>
           <p class="eyebrow">接取</p>
-          <h2>抽卡</h2>
+          <h2>抽一张任务</h2>
         </div>
         <span class="pool-count">{{ drawPool.length }} 张可抽</span>
       </div>
       <div class="draw-stage">
         <button class="draw-button" type="button" @click="store.drawQuest">
           <Dice5 />
-          <span>抽一张任务</span>
+          <span>开始抽取</span>
         </button>
         <QuestCard
           :quest="currentDraw"
@@ -48,7 +48,7 @@
 
     <section v-if="homeMode === 'draw'" class="panel">
       <div class="section-title">
-        <h2>词库预览</h2>
+        <h2>任务卡池</h2>
         <small>{{ approvedTasks.length }} 条</small>
       </div>
       <div class="task-list">
@@ -66,13 +66,13 @@
       <div class="panel-head">
         <div>
           <p class="eyebrow">发布</p>
-          <h2>投递任务</h2>
+          <h2>写一张任务卡</h2>
         </div>
-        <span class="pool-count">{{ pendingTasks.length }} 条待审</span>
+        <span class="pool-count">{{ pendingTasks.length }} 张待确认</span>
       </div>
       <form @submit.prevent="submitPublish">
         <label class="field">
-          <span>任务文案</span>
+          <span>任务内容</span>
           <textarea
             v-model="publishText"
             rows="5"
@@ -97,27 +97,30 @@
         </div>
         <button class="primary-button" type="submit">
           <Send />
-          <span>发布到审核</span>
+          <span>保存任务卡</span>
         </button>
       </form>
     </section>
 
     <section v-if="homeMode === 'publish'" class="panel">
       <div class="section-title">
-        <h2>审核台</h2>
-        <small>{{ pendingTasks.length }} 条</small>
+        <div>
+          <h2>待加入卡池</h2>
+          <p class="section-note">确认内容合适后，就可以让它进入抽取范围。</p>
+        </div>
+        <small>{{ pendingTasks.length }} 张</small>
       </div>
       <div class="task-list">
         <article v-for="task in pendingTasks" :key="task.id" class="list-card">
           <div class="tag-row">
-            <span class="tag yellow">审核中</span>
+            <span class="tag yellow">待确认</span>
             <span class="tag green">{{ task.category }}</span>
           </div>
           <p>{{ task.text }}</p>
           <div class="item-actions">
             <button class="primary-button" type="button" @click="store.approveTask(task.id)">
               <BadgeCheck />
-              <span>通过</span>
+              <span>加入卡池</span>
             </button>
             <button class="ghost-button" type="button" @click="store.removeTask(task.id)">
               <Undo2 />
@@ -126,15 +129,15 @@
           </div>
         </article>
         <div v-if="!pendingTasks.length" class="empty-state">
-          <strong>还没有待审核投稿</strong>
+          <strong>还没有待确认的任务卡</strong>
         </div>
       </div>
     </section>
 
     <section v-if="homeMode === 'publish'" class="panel">
       <div class="section-title">
-        <h2>我的入池</h2>
-        <small>{{ userApprovedTasks.length }} 条</small>
+        <h2>已加入卡池</h2>
+        <small>{{ userApprovedTasks.length }} 张</small>
       </div>
       <div class="task-list">
         <article v-for="task in userApprovedTasks.slice(0, 4)" :key="task.id" class="list-card">
@@ -145,7 +148,7 @@
           <p>{{ task.text }}</p>
         </article>
         <div v-if="!userApprovedTasks.length" class="empty-state">
-          <strong>通过后会出现在这里</strong>
+          <strong>加入卡池后会出现在这里</strong>
         </div>
       </div>
     </section>
@@ -159,8 +162,8 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
 import { BadgeCheck, Dice5, Send, Undo2 } from "@lucide/vue";
+import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -169,7 +172,12 @@ import CompleteDialog from "@/components/CompleteDialog.vue";
 import QuestCard from "@/components/QuestCard.vue";
 import SegmentTabs from "@/components/SegmentTabs.vue";
 import { useQuestStore } from "@/stores/questStore";
-import type { AcceptedQuest, AcceptedQuestStatus, CompletionPayload, QuestIntensity } from "@/types/quest";
+import type {
+  AcceptedQuest,
+  AcceptedQuestStatus,
+  CompletionPayload,
+  QuestIntensity,
+} from "@/types/quest";
 
 const router = useRouter();
 const store = useQuestStore();
