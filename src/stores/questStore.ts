@@ -200,6 +200,11 @@ export const useQuestStore = defineStore("quests", () => {
     return persist();
   }
 
+  function setDrawAnimation(value: boolean) {
+    preferences.drawAnimation = value;
+    return persist();
+  }
+
   function setCurrentPool(poolId: string) {
     if (!pools.value.some((pool) => pool.id === poolId)) {
       return false;
@@ -284,6 +289,7 @@ export const useQuestStore = defineStore("quests", () => {
     deleteAcceptedQuest,
     returnQuest,
     setLightOnly,
+    setDrawAnimation,
     setCurrentPool,
     updateUserProfile,
     clearLocalProgress,

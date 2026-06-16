@@ -97,6 +97,7 @@ describe("localQuestStorage", () => {
 
     expect(loaded.pools.map((pool) => pool.id)).toEqual(["public", "private"]);
     expect(loaded.preferences.selectedPoolId).toBe("public");
+    expect(loaded.preferences.drawAnimation).toBe(true);
     expect(loaded.tasks.find((task) => task.id === "old-task")?.poolId).toBe("public");
     expect(loaded.accepted[0]?.poolId).toBe("public");
   });

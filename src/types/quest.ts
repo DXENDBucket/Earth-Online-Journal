@@ -40,6 +40,7 @@ export interface AcceptedQuest {
 
 export interface QuestPreferences {
   lightOnly: boolean;
+  drawAnimation: boolean;
   selectedPoolId: string;
 }
 

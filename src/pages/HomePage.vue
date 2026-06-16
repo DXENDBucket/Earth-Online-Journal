@@ -31,15 +31,25 @@
           <p class="eyebrow">接取</p>
           <h2>抽一张任务</h2>
         </div>
-        <span class="pool-count">{{ drawPool.length }} 张可抽</span>
+        <div class="draw-head-actions">
+          <label class="inline-switch">
+            <span>抽卡动画</span>
+            <span class="switch switch-small">
+              <input v-model="drawAnimationEnabled" type="checkbox" />
+              <span></span>
+            </span>
+          </label>
+          <span class="pool-count">{{ drawPool.length }} 张可抽</span>
+        </div>
       </div>
       <div class="draw-stage">
-        <button class="draw-button" type="button" @click="drawQuest">
+        <button class="draw-button" type="button" :disabled="isDrawing" :aria-busy="isDrawing" @click="drawQuest">
           <Dice5 />
-          <span>开始抽取</span>
+          <span>{{ isDrawing ? "抽取中" : "开始抽取" }}</span>
         </button>
         <QuestCard
           :quest="currentDraw"
+          :is-revealing="isDrawing"
           @complete="openCompletion"
           @open-journal="openJournal"
           @return-quest="returnQuest"
@@ -149,7 +159,7 @@
 <script setup lang="ts">
 import { BadgeCheck, Dice5, Send, Undo2 } from "@lucide/vue";
 import { storeToRefs } from "pinia";
-import { ref } from "vue";
+import { computed, onBeforeUnmount, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import questCardImage from "@/assets/quest-card.png";
@@ -183,6 +193,13 @@ const publishText = ref("");
 const category = ref("观察");
 const intensity = ref<QuestIntensity>("light");
 const completionQuest = ref<AcceptedQuest | null>(null);
+const isDrawing = ref(false);
+let drawRevealTimer: ReturnType<typeof window.setTimeout> | undefined;
+
+const drawAnimationEnabled = computed({
+  get: () => store.preferences.drawAnimation,
+  set: (value: boolean) => store.setDrawAnimation(value),
+});
 
 const homeOptions = [
   { value: "draw", label: "接取" },
@@ -217,6 +234,10 @@ function submitPublish() {
 }
 
 function drawQuest() {
+  if (isDrawing.value) {
+    return;
+  }
+
   const result = store.drawQuest();
 
   if (result.status === "empty") {
@@ -231,8 +252,31 @@ function drawQuest() {
     return;
   }
 
+  playDrawReveal();
   notice.showNotice("已接取一张新的现实任务。", "success");
 }
+
+function playDrawReveal() {
+  if (!drawAnimationEnabled.value) {
+    return;
+  }
+
+  if (drawRevealTimer) {
+    window.clearTimeout(drawRevealTimer);
+  }
+
+  isDrawing.value = true;
+  drawRevealTimer = window.setTimeout(() => {
+    isDrawing.value = false;
+    drawRevealTimer = undefined;
+  }, 860);
+}
+
+onBeforeUnmount(() => {
+  if (drawRevealTimer) {
+    window.clearTimeout(drawRevealTimer);
+  }
+});
 
 function openCompletion(quest: AcceptedQuest) {
   completionQuest.value = quest;

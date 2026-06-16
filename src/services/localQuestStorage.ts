@@ -29,6 +29,7 @@ export function createInitialSnapshot(): QuestStoreSnapshot {
     accepted: [],
     preferences: {
       lightOnly: false,
+      drawAnimation: true,
       selectedPoolId: PUBLIC_POOL_ID,
     },
     currentDrawId: "",

@@ -211,6 +211,24 @@ h3 {
   font-weight: 800;
 }
 
+.draw-head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inline-switch {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .draw-stage {
   display: grid;
   gap: 12px;
@@ -235,6 +253,11 @@ h3 {
   transform: translateY(1px);
 }
 
+.draw-button:disabled {
+  cursor: wait;
+  opacity: 0.82;
+}
+
 .quest-card {
   position: relative;
   min-height: 180px;
@@ -250,6 +273,91 @@ h3 {
   inset: 0 0 auto;
   height: 7px;
   background: linear-gradient(90deg, var(--green), var(--yellow), var(--coral));
+}
+
+.quest-card-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 14px;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.quest-card.is-revealing .quest-card-content {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+.draw-reveal {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background:
+    linear-gradient(115deg, rgba(75, 134, 247, 0.08), rgba(255, 255, 255, 0.78) 46%, rgba(55, 169, 107, 0.1)),
+    var(--surface);
+  animation: reveal-layer 0.86s ease forwards;
+}
+
+.draw-reveal-card {
+  position: relative;
+  width: min(56%, 172px);
+  min-width: 116px;
+  aspect-ratio: 3 / 4;
+  display: grid;
+  align-content: end;
+  gap: 9px;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(75, 134, 247, 0.26);
+  border-radius: 8px;
+  background:
+    linear-gradient(160deg, #ffffff, #eef5ff 58%, #e5f6e9),
+    var(--surface);
+  box-shadow: 0 18px 34px rgba(44, 66, 90, 0.16);
+  transform-origin: center;
+  animation: reveal-card 0.86s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.draw-reveal-card::before {
+  content: "";
+  position: absolute;
+  inset: -18% auto -18% -48%;
+  width: 38%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.92), transparent);
+  transform: rotate(16deg);
+  animation: reveal-sweep 0.86s ease forwards;
+}
+
+.draw-reveal-card::after {
+  content: "";
+  position: absolute;
+  inset: 13px 13px auto;
+  height: 7px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--green), var(--yellow), var(--coral));
+}
+
+.draw-reveal-card span {
+  display: block;
+  height: 8px;
+  border-radius: 6px;
+  background: rgba(75, 134, 247, 0.18);
+}
+
+.draw-reveal-card span:nth-child(2) {
+  width: 72%;
+  background: rgba(55, 169, 107, 0.2);
+}
+
+.draw-reveal-card span:nth-child(3) {
+  width: 48%;
+  background: rgba(239, 117, 100, 0.18);
 }
 
 .quest-card.empty {
@@ -720,6 +828,23 @@ h3 {
   transform: translateX(20px);
 }
 
+.switch-small {
+  width: 38px;
+  height: 22px;
+}
+
+.switch-small span::after {
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+}
+
+.switch-small input:checked + span::after {
+  transform: translateX(16px);
+}
+
 .bottom-nav {
   position: fixed;
   z-index: 10;
@@ -852,6 +977,49 @@ svg {
   gap: 9px;
 }
 
+@keyframes reveal-layer {
+  0%,
+  74% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes reveal-card {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.86) rotateY(68deg);
+  }
+
+  42% {
+    opacity: 1;
+    transform: translateY(0) scale(1.04) rotateY(0deg);
+  }
+
+  76% {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes reveal-sweep {
+  0% {
+    left: -48%;
+  }
+
+  100% {
+    left: 112%;
+  }
+}
+
 @media (max-width: 430px) {
   .app-main {
     padding-inline: 12px;
@@ -880,5 +1048,24 @@ svg {
 
   .account-actions {
     grid-template-columns: 1fr;
+  }
+
+  .draw-head-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draw-reveal {
+    display: none;
+  }
+
+  .quest-card.is-revealing .quest-card-content {
+    opacity: 1;
+    transform: none;
+  }
+
+  .quest-card-content {
+    transition: none;
   }
 }

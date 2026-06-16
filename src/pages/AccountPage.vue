@@ -64,6 +64,16 @@
             <span></span>
           </span>
         </label>
+        <label class="setting-row">
+          <div>
+            <strong>抽卡动画</strong>
+            <p>接取任务时播放一段简约翻卡效果。</p>
+          </div>
+          <span class="switch">
+            <input v-model="drawAnimationEnabled" type="checkbox" />
+            <span></span>
+          </span>
+        </label>
         <div class="setting-row">
           <div>
             <strong>这台设备上的记录</strong>
@@ -114,6 +124,11 @@ const profileHandle = ref(store.user.handle);
 const lightOnly = computed({
   get: () => store.preferences.lightOnly,
   set: (value: boolean) => store.setLightOnly(value),
+});
+
+const drawAnimationEnabled = computed({
+  get: () => store.preferences.drawAnimation,
+  set: (value: boolean) => store.setDrawAnimation(value),
 });
 
 watch(

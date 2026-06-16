@@ -73,6 +73,18 @@ describe("questStore", () => {
     expect(store.pendingTasks).toHaveLength(1);
   });
 
+  it("saves the draw animation preference", () => {
+    const store = useQuestStore();
+
+    expect(store.preferences.drawAnimation).toBe(true);
+    expect(store.setDrawAnimation(false)).toBe(true);
+
+    setActivePinia(createPinia());
+    const reloaded = useQuestStore();
+
+    expect(reloaded.preferences.drawAnimation).toBe(false);
+  });
+
   it("returns storage-error when a change cannot be saved", () => {
     const listener = vi.fn();
     window.addEventListener(QUEST_STORAGE_ERROR_EVENT, listener);
