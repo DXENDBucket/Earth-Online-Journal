@@ -17,7 +17,19 @@ npm run check
 
 ## GitHub Pages 发布
 
-项目已经包含 GitHub Pages 工作流：`.github/workflows/deploy.yml`。
+项目支持两种发布方式。
+
+### 手动发布
+
+```bash
+npm run deploy
+```
+
+这会构建站点，并把 `dist` 发布到 `gh-pages` 分支。
+
+### 自动发布
+
+项目也包含 GitHub Pages 工作流：`.github/workflows/deploy.yml`。
 
 首次使用时，在 GitHub 仓库中打开：
 
