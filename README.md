@@ -62,6 +62,8 @@ uvicorn app.main:app --reload
 VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
+本地开发时如果不配置 `VITE_API_BASE_URL`，前端会自动使用上面的本地后端地址。
+
 ## 检查构建
 
 ```bash
@@ -93,6 +95,24 @@ npm run deploy
 之后提交并推送到 `main` 分支，`.github/workflows/deploy.yml` 会自动构建并发布。发布地址通常是：
 
 `https://dxendbucket.github.io/Earth-Online-Journal/`
+
+GitHub Pages 只托管前端静态文件，不能直接运行 FastAPI 后端。要让 Pages 上的注册、登录和同步可用，需要先把后端部署到一个可公网访问的 HTTPS 地址，然后在 GitHub 仓库里配置：
+
+`Settings -> Secrets and variables -> Actions -> Variables -> New repository variable`
+
+变量名：
+
+```env
+VITE_API_BASE_URL
+```
+
+变量值示例：
+
+```env
+https://your-api.example.com
+```
+
+也可以把同名配置放到 Actions Secret 里。未配置时，Pages 页面仍可打开，但账号注册/登录会提示云端服务还没有配置。
 
 ## 当前数据状态
 
