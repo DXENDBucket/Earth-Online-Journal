@@ -3,6 +3,7 @@
     <main class="app-main" aria-live="polite">
       <RouterView />
     </main>
+    <AppNotice />
     <BottomNav />
   </div>
 </template>
@@ -10,5 +11,6 @@
 <script setup lang="ts">
 import { RouterView } from "vue-router";
 
+import AppNotice from "@/components/AppNotice.vue";
 import BottomNav from "@/components/BottomNav.vue";
 </script>

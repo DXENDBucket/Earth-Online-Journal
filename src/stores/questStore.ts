@@ -7,6 +7,7 @@ import {
   loadQuestSnapshot,
   saveQuestSnapshot,
 } from "@/services/localQuestStorage";
+import type { QuestStoreSnapshot } from "@/services/localQuestStorage";
 import type {
   AcceptedQuest,
   CompletionPayload,
@@ -142,12 +143,31 @@ export const useQuestStore = defineStore("quests", () => {
   function clearLocalProgress() {
     clearQuestSnapshot();
     const fresh = createInitialSnapshot();
-    tasks.value = fresh.tasks;
-    accepted.value = fresh.accepted;
-    Object.assign(preferences, fresh.preferences);
-    Object.assign(user, fresh.user);
-    currentDrawId.value = fresh.currentDrawId;
+    applySnapshot(fresh);
     persist();
+  }
+
+  function getSnapshot(): QuestStoreSnapshot {
+    return {
+      tasks: tasks.value,
+      accepted: accepted.value,
+      preferences: { ...preferences },
+      currentDrawId: currentDrawId.value,
+      user: { ...user },
+    };
+  }
+
+  function importSnapshot(snapshot: QuestStoreSnapshot) {
+    applySnapshot(snapshot);
+    persist();
+  }
+
+  function applySnapshot(snapshot: QuestStoreSnapshot) {
+    tasks.value = snapshot.tasks;
+    accepted.value = snapshot.accepted;
+    Object.assign(preferences, snapshot.preferences);
+    Object.assign(user, snapshot.user);
+    currentDrawId.value = snapshot.currentDrawId;
   }
 
   function persist() {
@@ -181,6 +201,8 @@ export const useQuestStore = defineStore("quests", () => {
     completeQuest,
     setLightOnly,
     clearLocalProgress,
+    getSnapshot,
+    importSnapshot,
   };
 });
 

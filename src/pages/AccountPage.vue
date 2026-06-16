@@ -50,6 +50,17 @@
             <p>当前版本会把任务和完成记录保存在本机浏览器里。</p>
           </div>
         </div>
+        <div class="account-actions">
+          <button class="secondary-button" type="button" @click="downloadRecords">
+            <Download />
+            <span>下载我的记录</span>
+          </button>
+          <label class="secondary-button file-button">
+            <Upload />
+            <span>导入记录</span>
+            <input type="file" accept="application/json" @change="importRecords" />
+          </label>
+        </div>
         <button class="danger-button" type="button" @click="clearLocalProgress">
           <RotateCcw />
           <span>清空本机记录</span>
@@ -60,12 +71,15 @@
 </template>
 
 <script setup lang="ts">
-import { RotateCcw } from "@lucide/vue";
+import { Download, RotateCcw, Upload } from "@lucide/vue";
 import { computed } from "vue";
 
+import type { QuestStoreSnapshot } from "@/services/localQuestStorage";
+import { useNoticeStore } from "@/stores/noticeStore";
 import { useQuestStore } from "@/stores/questStore";
 
 const store = useQuestStore();
+const notice = useNoticeStore();
 
 const lightOnly = computed({
   get: () => store.preferences.lightOnly,
@@ -75,6 +89,72 @@ const lightOnly = computed({
 function clearLocalProgress() {
   if (window.confirm("要清空这台设备上的任务和完成记录吗？")) {
     store.clearLocalProgress();
+    notice.showNotice("这台设备上的记录已清空。", "success");
   }
+}
+
+function downloadRecords() {
+  const content = JSON.stringify(store.getSnapshot(), null, 2);
+  const blob = new Blob([content], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `earth-online-journal-${formatDateForFile(new Date())}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  notice.showNotice("记录文件已开始下载。", "success");
+}
+
+function importRecords(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+
+  if (!file) {
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      const snapshot = JSON.parse(String(reader.result)) as QuestStoreSnapshot;
+
+      if (!isValidSnapshot(snapshot)) {
+        notice.showNotice("这个文件不是可导入的记录。", "warning");
+        return;
+      }
+
+      store.importSnapshot(snapshot);
+      notice.showNotice("记录已导入。", "success");
+    } catch {
+      notice.showNotice("记录文件读取失败。", "warning");
+    } finally {
+      input.value = "";
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+function isValidSnapshot(value: QuestStoreSnapshot) {
+  return Boolean(
+    value &&
+      Array.isArray(value.tasks) &&
+      Array.isArray(value.accepted) &&
+      value.preferences &&
+      typeof value.currentDrawId === "string" &&
+      value.user,
+  );
+}
+
+function formatDateForFile(date: Date) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+    .format(date)
+    .replaceAll("/", "-");
 }
 </script>

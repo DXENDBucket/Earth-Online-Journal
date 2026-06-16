@@ -57,6 +57,7 @@ import { useRoute, useRouter } from "vue-router";
 import questCardImage from "@/assets/quest-card.png";
 import CompleteDialog from "@/components/CompleteDialog.vue";
 import SegmentTabs from "@/components/SegmentTabs.vue";
+import { useNoticeStore } from "@/stores/noticeStore";
 import { useQuestStore } from "@/stores/questStore";
 import type { AcceptedQuest, CompletionPayload } from "@/types/quest";
 
@@ -65,6 +66,7 @@ type JournalFilter = "todo" | "done";
 const route = useRoute();
 const router = useRouter();
 const store = useQuestStore();
+const notice = useNoticeStore();
 const { todoQuests, doneQuests } = storeToRefs(store);
 const completionQuest = ref<AcceptedQuest | null>(null);
 
@@ -90,6 +92,7 @@ function completeQuest(payload: CompletionPayload) {
 
   store.completeQuest(completionQuest.value.id, payload);
   completionQuest.value = null;
+  notice.showNotice("完成记录已保存。", "success");
   setFilter("done");
 }
 

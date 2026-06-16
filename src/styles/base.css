@@ -539,6 +539,24 @@ h3 {
   gap: 10px;
 }
 
+.account-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.file-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.file-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .setting-row {
   display: flex;
   align-items: center;
@@ -613,6 +631,61 @@ h3 {
   box-shadow: 0 14px 32px rgba(32, 47, 39, 0.16);
   transform: translateX(-50%);
   backdrop-filter: blur(14px);
+}
+
+.app-notice {
+  position: fixed;
+  z-index: 20;
+  left: 50%;
+  bottom: 88px;
+  width: min(calc(100% - 24px), 500px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 12px 14px;
+  border: 1px solid rgba(210, 223, 214, 0.92);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 32px rgba(32, 47, 39, 0.16);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+  transform: translateX(-50%);
+  backdrop-filter: blur(14px);
+}
+
+.app-notice.is-success {
+  border-color: rgba(55, 169, 107, 0.32);
+}
+
+.app-notice.is-warning {
+  border-color: rgba(239, 117, 100, 0.32);
+}
+
+.app-notice button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 7px;
+  background: #f2f7f4;
+  color: var(--muted);
+}
+
+.notice-enter-active,
+.notice-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.notice-enter-from,
+.notice-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 10px);
 }
 
 .nav-item {
@@ -694,5 +767,9 @@ svg {
 
   .metric-row {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .account-actions {
+    grid-template-columns: 1fr;
   }
 }

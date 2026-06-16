@@ -34,7 +34,7 @@
         <span class="pool-count">{{ drawPool.length }} 张可抽</span>
       </div>
       <div class="draw-stage">
-        <button class="draw-button" type="button" @click="store.drawQuest">
+        <button class="draw-button" type="button" @click="drawQuest">
           <Dice5 />
           <span>开始抽取</span>
         </button>
@@ -171,6 +171,7 @@ import questCardImage from "@/assets/quest-card.png";
 import CompleteDialog from "@/components/CompleteDialog.vue";
 import QuestCard from "@/components/QuestCard.vue";
 import SegmentTabs from "@/components/SegmentTabs.vue";
+import { useNoticeStore } from "@/stores/noticeStore";
 import { useQuestStore } from "@/stores/questStore";
 import type {
   AcceptedQuest,
@@ -181,6 +182,7 @@ import type {
 
 const router = useRouter();
 const store = useQuestStore();
+const notice = useNoticeStore();
 const {
   approvedTasks,
   pendingTasks,
@@ -211,10 +213,23 @@ function submitPublish() {
   });
 
   if (!task) {
+    notice.showNotice("先写下任务内容，再保存任务卡。", "warning");
     return;
   }
 
   publishText.value = "";
+  notice.showNotice("任务卡已保存，确认后就会进入卡池。", "success");
+}
+
+function drawQuest() {
+  const quest = store.drawQuest();
+
+  if (!quest) {
+    notice.showNotice("当前没有可抽取的任务卡。", "warning");
+    return;
+  }
+
+  notice.showNotice("已接取一张新的现实任务。", "success");
 }
 
 function openCompletion(quest: AcceptedQuest) {
@@ -228,6 +243,7 @@ function completeQuest(payload: CompletionPayload) {
 
   store.completeQuest(completionQuest.value.id, payload);
   completionQuest.value = null;
+  notice.showNotice("完成记录已保存。", "success");
   router.push({ name: "journal", query: { filter: "done" } });
 }
 
