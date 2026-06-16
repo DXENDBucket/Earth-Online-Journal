@@ -42,6 +42,7 @@
           :quest="currentDraw"
           @complete="openCompletion"
           @open-journal="openJournal"
+          @return-quest="returnQuest"
         />
       </div>
     </section>
@@ -245,6 +246,12 @@ function completeQuest(payload: CompletionPayload) {
   completionQuest.value = null;
   notice.showNotice("完成记录已保存。", "success");
   router.push({ name: "journal", query: { filter: "done" } });
+}
+
+function returnQuest(quest: AcceptedQuest) {
+  if (store.returnQuest(quest.id)) {
+    notice.showNotice("任务已放回卡池。", "success");
+  }
 }
 
 function openJournal(status: AcceptedQuestStatus) {

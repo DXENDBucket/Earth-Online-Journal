@@ -137,6 +137,23 @@ export const useQuestStore = defineStore("quests", () => {
     persist();
   }
 
+  function returnQuest(id: string) {
+    const index = accepted.value.findIndex((quest) => quest.id === id && quest.status === "todo");
+
+    if (index < 0) {
+      return false;
+    }
+
+    accepted.value.splice(index, 1);
+
+    if (currentDrawId.value === id) {
+      currentDrawId.value = todoQuests.value[0]?.id || "";
+    }
+
+    persist();
+    return true;
+  }
+
   function setLightOnly(value: boolean) {
     preferences.lightOnly = value;
     persist();
@@ -207,6 +224,7 @@ export const useQuestStore = defineStore("quests", () => {
     removeTask,
     drawQuest,
     completeQuest,
+    returnQuest,
     setLightOnly,
     updateUserProfile,
     clearLocalProgress,

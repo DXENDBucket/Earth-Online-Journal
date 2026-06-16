@@ -37,6 +37,10 @@
             <CheckCircle2 />
             <span>确认完成</span>
           </button>
+          <button class="ghost-button" type="button" @click="returnQuest(quest)">
+            <Undo2 />
+            <span>放回卡池</span>
+          </button>
         </div>
       </article>
 
@@ -56,7 +60,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { CheckCircle2 } from "@lucide/vue";
+import { CheckCircle2, Undo2 } from "@lucide/vue";
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -100,6 +104,12 @@ function completeQuest(payload: CompletionPayload) {
   completionQuest.value = null;
   notice.showNotice("完成记录已保存。", "success");
   setFilter("done");
+}
+
+function returnQuest(quest: AcceptedQuest) {
+  if (store.returnQuest(quest.id)) {
+    notice.showNotice("任务已放回卡池。", "success");
+  }
 }
 
 function formatDate(timestamp: number | null) {

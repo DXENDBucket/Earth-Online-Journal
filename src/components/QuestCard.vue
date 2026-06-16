@@ -23,6 +23,15 @@
         <ListChecks v-else />
         <span>{{ quest.status === "done" ? "查看记录" : "未完成" }}</span>
       </button>
+      <button
+        v-if="quest.status === 'todo'"
+        class="ghost-button"
+        type="button"
+        @click="$emit('returnQuest', quest)"
+      >
+        <Undo2 />
+        <span>放回卡池</span>
+      </button>
     </div>
   </article>
   <div v-else class="quest-card empty">
@@ -32,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { BookOpenCheck, Camera, ListChecks } from "@lucide/vue";
+import { BookOpenCheck, Camera, ListChecks, Undo2 } from "@lucide/vue";
 
 import questCardImage from "@/assets/quest-card.png";
 import type { AcceptedQuest, AcceptedQuestStatus } from "@/types/quest";
@@ -50,5 +59,6 @@ withDefaults(
 defineEmits<{
   complete: [quest: AcceptedQuest];
   openJournal: [status: AcceptedQuestStatus];
+  returnQuest: [quest: AcceptedQuest];
 }>();
 </script>
