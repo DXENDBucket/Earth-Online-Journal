@@ -137,7 +137,7 @@
 
     <section v-if="homeMode === 'publish'" class="panel">
       <div class="section-title">
-        <h2>已加入卡池</h2>
+        <h2>我的任务卡</h2>
         <small>{{ userApprovedTasks.length }} 张</small>
       </div>
       <div class="task-list">
@@ -207,14 +207,19 @@ const homeOptions = [
 const categories = ["观察", "记录", "行动", "尝试", "探索", "随机"];
 
 function submitPublish() {
-  const task = store.publishTask({
+  const result = store.publishTask({
     text: publishText.value,
     category: category.value,
     intensity: intensity.value,
   });
 
-  if (!task) {
+  if (result.status === "empty") {
     notice.showNotice("先写下任务内容，再保存任务卡。", "warning");
+    return;
+  }
+
+  if (result.status === "duplicate") {
+    notice.showNotice("这张任务卡已经在卡池里了。", "warning");
     return;
   }
 

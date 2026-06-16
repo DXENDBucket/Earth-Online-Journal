@@ -47,3 +47,15 @@ export interface PublishQuestPayload {
   category: string;
   intensity: QuestIntensity;
 }
+
+export type PublishQuestResult =
+  | {
+      status: "empty";
+    }
+  | {
+      status: "duplicate";
+    }
+  | {
+      status: "created";
+      task: QuestTask;
+    };

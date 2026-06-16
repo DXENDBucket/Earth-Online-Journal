@@ -12,6 +12,7 @@ import type {
   AcceptedQuest,
   CompletionPayload,
   PublishQuestPayload,
+  PublishQuestResult,
   QuestPreferences,
   QuestTask,
   UserProfile,
@@ -55,11 +56,15 @@ export const useQuestStore = defineStore("quests", () => {
     userApproved: userApprovedTasks.value.length,
   }));
 
-  function publishTask(payload: PublishQuestPayload) {
+  function publishTask(payload: PublishQuestPayload): PublishQuestResult {
     const text = payload.text.trim();
 
     if (!text) {
-      return null;
+      return { status: "empty" };
+    }
+
+    if (hasSameTask(text)) {
+      return { status: "duplicate" };
     }
 
     const task: QuestTask = {
@@ -74,7 +79,12 @@ export const useQuestStore = defineStore("quests", () => {
 
     tasks.value.unshift(task);
     persist();
-    return task;
+    return { status: "created", task };
+  }
+
+  function hasSameTask(text: string) {
+    const normalizedText = normalizeTaskText(text);
+    return tasks.value.some((task) => normalizeTaskText(task.text) === normalizedText);
   }
 
   function approveTask(id: string) {
@@ -261,4 +271,8 @@ function uid(prefix: string) {
   }
 
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function normalizeTaskText(text: string) {
+  return text.trim().replace(/\s+/g, " ").toLowerCase();
 }
