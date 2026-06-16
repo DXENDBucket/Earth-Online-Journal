@@ -586,6 +586,20 @@ h3 {
   font-weight: 900;
 }
 
+.progress-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #eaf1ed;
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--green), var(--blue));
+}
+
 .profile-panel {
   padding: 4px 0 2px;
 }

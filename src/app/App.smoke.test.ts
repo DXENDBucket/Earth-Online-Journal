@@ -50,6 +50,15 @@ describe("App smoke flow", () => {
     expect(wrapper.text()).toContain("完成记录已保存。");
     expect(wrapper.text()).toContain("今天认真观察了一件小事。");
 
+    await router.push({ name: "rank" });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("本周回顾");
+    expect(wrapper.text()).toContain("本周完成");
+    expect(wrapper.text()).toContain("类型足迹");
+    expect(wrapper.text()).toContain("最近完成");
+    expect(wrapper.text()).toContain("今天认真观察了一件小事。");
+
     wrapper.unmount();
   });
 });
