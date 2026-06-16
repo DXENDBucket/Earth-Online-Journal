@@ -117,17 +117,23 @@ watch(
 );
 
 function saveProfile() {
-  store.updateUserProfile({
+  const saved = store.updateUserProfile({
     name: profileName.value,
     handle: profileHandle.value,
   });
+
+  if (!saved) {
+    return;
+  }
+
   notice.showNotice("个人资料已保存。", "success");
 }
 
 function clearLocalProgress() {
   if (window.confirm("要清空这台设备上的任务和完成记录吗？")) {
-    store.clearLocalProgress();
-    notice.showNotice("这台设备上的记录已清空。", "success");
+    if (store.clearLocalProgress()) {
+      notice.showNotice("这台设备上的记录已清空。", "success");
+    }
   }
 }
 
@@ -163,8 +169,9 @@ function importRecords(event: Event) {
         return;
       }
 
-      store.importSnapshot(snapshot);
-      notice.showNotice("记录已导入。", "success");
+      if (store.importSnapshot(snapshot)) {
+        notice.showNotice("记录已导入。", "success");
+      }
     } catch {
       notice.showNotice("记录文件读取失败。", "warning");
     } finally {

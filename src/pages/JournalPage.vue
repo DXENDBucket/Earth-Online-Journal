@@ -170,8 +170,13 @@ function completeQuest(payload: CompletionPayload) {
     return;
   }
 
-  store.completeQuest(completionQuest.value.id, payload);
+  const saved = store.completeQuest(completionQuest.value.id, payload);
   completionQuest.value = null;
+
+  if (!saved) {
+    return;
+  }
+
   notice.showNotice("完成记录已保存。", "success");
   setFilter("done");
 }

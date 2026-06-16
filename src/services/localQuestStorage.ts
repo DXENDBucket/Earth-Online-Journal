@@ -7,6 +7,8 @@ import type {
 } from "@/types/quest";
 
 const STORE_KEY = "earth-online-journal-v1";
+export const QUEST_STORAGE_ERROR_EVENT = "earth-online-storage-error";
+export type QuestStorageErrorReason = "full" | "unavailable";
 
 export interface QuestStoreSnapshot {
   tasks: QuestTask[];
@@ -69,18 +71,68 @@ export function loadQuestSnapshot(): QuestStoreSnapshot {
 
 export function saveQuestSnapshot(snapshot: QuestStoreSnapshot) {
   if (!canUseStorage()) {
-    return;
+    emitStorageError("unavailable");
+    return false;
   }
 
-  localStorage.setItem(STORE_KEY, JSON.stringify(snapshot));
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(snapshot));
+    return true;
+  } catch (error) {
+    emitStorageError(isQuotaError(error) ? "full" : "unavailable");
+    return false;
+  }
 }
 
 export function clearQuestSnapshot() {
-  if (canUseStorage()) {
+  if (!canUseStorage()) {
+    emitStorageError("unavailable");
+    return false;
+  }
+
+  try {
     localStorage.removeItem(STORE_KEY);
+    return true;
+  } catch {
+    emitStorageError("unavailable");
+    return false;
   }
 }
 
 function canUseStorage() {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    return typeof window.localStorage !== "undefined";
+  } catch {
+    return false;
+  }
+}
+
+function emitStorageError(reason: QuestStorageErrorReason) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent(QUEST_STORAGE_ERROR_EVENT, {
+      detail: { reason },
+    }),
+  );
+}
+
+function isQuotaError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const storageError = error as { code?: number; name?: string };
+  return (
+    storageError.name === "QuotaExceededError" ||
+    storageError.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+    storageError.code === 22 ||
+    storageError.code === 1014
+  );
 }

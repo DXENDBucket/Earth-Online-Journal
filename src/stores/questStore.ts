@@ -11,6 +11,7 @@ import type { QuestStoreSnapshot } from "@/services/localQuestStorage";
 import type {
   AcceptedQuest,
   CompletionPayload,
+  DrawQuestResult,
   PublishQuestPayload,
   PublishQuestResult,
   QuestPreferences,
@@ -78,8 +79,7 @@ export const useQuestStore = defineStore("quests", () => {
     };
 
     tasks.value.unshift(task);
-    persist();
-    return { status: "created", task };
+    return persist() ? { status: "created", task } : { status: "storage-error", task };
   }
 
   function hasSameTask(text: string) {
@@ -110,9 +110,9 @@ export const useQuestStore = defineStore("quests", () => {
     persist();
   }
 
-  function drawQuest() {
+  function drawQuest(): DrawQuestResult {
     if (!drawPool.value.length) {
-      return null;
+      return { status: "empty" };
     }
 
     const picked = drawPool.value[Math.floor(Math.random() * drawPool.value.length)];
@@ -132,15 +132,14 @@ export const useQuestStore = defineStore("quests", () => {
 
     accepted.value.unshift(quest);
     currentDrawId.value = quest.id;
-    persist();
-    return quest;
+    return persist() ? { status: "created", quest } : { status: "storage-error", quest };
   }
 
   function completeQuest(id: string, payload: CompletionPayload) {
     const quest = accepted.value.find((item) => item.id === id);
 
     if (!quest) {
-      return;
+      return false;
     }
 
     quest.status = "done";
@@ -148,7 +147,7 @@ export const useQuestStore = defineStore("quests", () => {
     quest.reflection = payload.reflection.trim();
     quest.photoName = payload.photoName;
     quest.photoDataUrl = payload.photoDataUrl;
-    persist();
+    return persist();
   }
 
   function deleteAcceptedQuest(id: string) {
@@ -164,8 +163,7 @@ export const useQuestStore = defineStore("quests", () => {
       currentDrawId.value = todoQuests.value[0]?.id || "";
     }
 
-    persist();
-    return true;
+    return persist();
   }
 
   function returnQuest(id: string) {
@@ -181,26 +179,25 @@ export const useQuestStore = defineStore("quests", () => {
       currentDrawId.value = todoQuests.value[0]?.id || "";
     }
 
-    persist();
-    return true;
+    return persist();
   }
 
   function setLightOnly(value: boolean) {
     preferences.lightOnly = value;
-    persist();
+    return persist();
   }
 
   function updateUserProfile(nextUser: UserProfile) {
     user.name = nextUser.name.trim() || "地球旅人";
     user.handle = nextUser.handle.trim() || "EOJ-2049";
-    persist();
+    return persist();
   }
 
   function clearLocalProgress() {
     clearQuestSnapshot();
     const fresh = createInitialSnapshot();
     applySnapshot(fresh);
-    persist();
+    return persist();
   }
 
   function getSnapshot(): QuestStoreSnapshot {
@@ -215,7 +212,7 @@ export const useQuestStore = defineStore("quests", () => {
 
   function importSnapshot(snapshot: QuestStoreSnapshot) {
     applySnapshot(snapshot);
-    persist();
+    return persist();
   }
 
   function applySnapshot(snapshot: QuestStoreSnapshot) {
@@ -227,7 +224,7 @@ export const useQuestStore = defineStore("quests", () => {
   }
 
   function persist() {
-    saveQuestSnapshot({
+    return saveQuestSnapshot({
       tasks: tasks.value,
       accepted: accepted.value,
       preferences: { ...preferences },

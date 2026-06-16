@@ -58,4 +58,21 @@ export type PublishQuestResult =
   | {
       status: "created";
       task: QuestTask;
+    }
+  | {
+      status: "storage-error";
+      task: QuestTask;
+    };
+
+export type DrawQuestResult =
+  | {
+      status: "empty";
+    }
+  | {
+      status: "created";
+      quest: AcceptedQuest;
+    }
+  | {
+      status: "storage-error";
+      quest: AcceptedQuest;
     };

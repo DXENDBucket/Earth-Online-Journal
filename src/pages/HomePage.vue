@@ -260,18 +260,26 @@ function submitPublish() {
     return;
   }
 
+  if (result.status === "storage-error") {
+    return;
+  }
+
   publishText.value = "";
   notice.showNotice("任务卡已保存，确认后就会进入卡池。", "success");
 }
 
 function drawQuest() {
-  const quest = store.drawQuest();
+  const result = store.drawQuest();
 
-  if (!quest) {
+  if (result.status === "empty") {
     const message = approvedTasks.value.length
       ? "可抽任务都在进行中，完成或放回一个后再抽。"
       : "当前没有可抽取的任务卡。";
     notice.showNotice(message, "warning");
+    return;
+  }
+
+  if (result.status === "storage-error") {
     return;
   }
 
@@ -287,8 +295,13 @@ function completeQuest(payload: CompletionPayload) {
     return;
   }
 
-  store.completeQuest(completionQuest.value.id, payload);
+  const saved = store.completeQuest(completionQuest.value.id, payload);
   completionQuest.value = null;
+
+  if (!saved) {
+    return;
+  }
+
   notice.showNotice("完成记录已保存。", "success");
   router.push({ name: "journal", query: { filter: "done" } });
 }
