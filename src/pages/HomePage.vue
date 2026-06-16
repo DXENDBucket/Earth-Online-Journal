@@ -1,0 +1,232 @@
+<template>
+  <section class="screen">
+    <section class="app-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Earth Online Journal</p>
+        <h1>地球 Online 任务池</h1>
+        <p class="hero-line">把现实世界当作开放地图，抽一张今天能完成的小任务。</p>
+        <div class="metric-row">
+          <div class="metric">
+            <strong>{{ stats.approved }}</strong>
+            <span>卡池</span>
+          </div>
+          <div class="metric">
+            <strong>{{ stats.todo }}</strong>
+            <span>未完成</span>
+          </div>
+          <div class="metric">
+            <strong>{{ stats.done }}</strong>
+            <span>已完成</span>
+          </div>
+        </div>
+      </div>
+      <img class="hero-art" :src="questCardImage" alt="" />
+    </section>
+
+    <SegmentTabs v-model="homeMode" label="发布接取" :options="homeOptions" />
+
+    <section v-if="homeMode === 'draw'" class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">接取</p>
+          <h2>抽卡</h2>
+        </div>
+        <span class="pool-count">{{ drawPool.length }} 张可抽</span>
+      </div>
+      <div class="draw-stage">
+        <button class="draw-button" type="button" @click="store.drawQuest">
+          <Dice5 />
+          <span>抽一张任务</span>
+        </button>
+        <QuestCard
+          :quest="currentDraw"
+          @complete="openCompletion"
+          @open-journal="openJournal"
+        />
+      </div>
+    </section>
+
+    <section v-if="homeMode === 'draw'" class="panel">
+      <div class="section-title">
+        <h2>词库预览</h2>
+        <small>{{ approvedTasks.length }} 条</small>
+      </div>
+      <div class="task-list">
+        <article v-for="task in approvedTasks.slice(0, 4)" :key="task.id" class="list-card">
+          <div class="tag-row">
+            <span class="tag green">{{ task.category }}</span>
+            <span class="tag">{{ task.source }}</span>
+          </div>
+          <p>{{ task.text }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section v-if="homeMode === 'publish'" class="panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">发布</p>
+          <h2>投递任务</h2>
+        </div>
+        <span class="pool-count">{{ pendingTasks.length }} 条待审</span>
+      </div>
+      <form @submit.prevent="submitPublish">
+        <label class="field">
+          <span>任务文案</span>
+          <textarea
+            v-model="publishText"
+            rows="5"
+            maxlength="120"
+            placeholder="例如：给今天的天空取一个名字"
+          ></textarea>
+        </label>
+        <div class="form-grid">
+          <label class="field">
+            <span>类型</span>
+            <select v-model="category">
+              <option v-for="item in categories" :key="item">{{ item }}</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>强度</span>
+            <select v-model="intensity">
+              <option value="light">轻量</option>
+              <option value="normal">普通</option>
+            </select>
+          </label>
+        </div>
+        <button class="primary-button" type="submit">
+          <Send />
+          <span>发布到审核</span>
+        </button>
+      </form>
+    </section>
+
+    <section v-if="homeMode === 'publish'" class="panel">
+      <div class="section-title">
+        <h2>审核台</h2>
+        <small>{{ pendingTasks.length }} 条</small>
+      </div>
+      <div class="task-list">
+        <article v-for="task in pendingTasks" :key="task.id" class="list-card">
+          <div class="tag-row">
+            <span class="tag yellow">审核中</span>
+            <span class="tag green">{{ task.category }}</span>
+          </div>
+          <p>{{ task.text }}</p>
+          <div class="item-actions">
+            <button class="primary-button" type="button" @click="store.approveTask(task.id)">
+              <BadgeCheck />
+              <span>通过</span>
+            </button>
+            <button class="ghost-button" type="button" @click="store.removeTask(task.id)">
+              <Undo2 />
+              <span>撤回</span>
+            </button>
+          </div>
+        </article>
+        <div v-if="!pendingTasks.length" class="empty-state">
+          <strong>还没有待审核投稿</strong>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="homeMode === 'publish'" class="panel">
+      <div class="section-title">
+        <h2>我的入池</h2>
+        <small>{{ userApprovedTasks.length }} 条</small>
+      </div>
+      <div class="task-list">
+        <article v-for="task in userApprovedTasks.slice(0, 4)" :key="task.id" class="list-card">
+          <div class="tag-row">
+            <span class="tag green">{{ task.category }}</span>
+            <span class="tag">{{ task.source }}</span>
+          </div>
+          <p>{{ task.text }}</p>
+        </article>
+        <div v-if="!userApprovedTasks.length" class="empty-state">
+          <strong>通过后会出现在这里</strong>
+        </div>
+      </div>
+    </section>
+
+    <CompleteDialog
+      :quest="completionQuest"
+      @close="completionQuest = null"
+      @complete="completeQuest"
+    />
+  </section>
+</template>
+
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { BadgeCheck, Dice5, Send, Undo2 } from "@lucide/vue";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+
+import questCardImage from "@/assets/quest-card.png";
+import CompleteDialog from "@/components/CompleteDialog.vue";
+import QuestCard from "@/components/QuestCard.vue";
+import SegmentTabs from "@/components/SegmentTabs.vue";
+import { useQuestStore } from "@/stores/questStore";
+import type { AcceptedQuest, AcceptedQuestStatus, CompletionPayload, QuestIntensity } from "@/types/quest";
+
+const router = useRouter();
+const store = useQuestStore();
+const {
+  approvedTasks,
+  pendingTasks,
+  drawPool,
+  currentDraw,
+  userApprovedTasks,
+  stats,
+} = storeToRefs(store);
+
+const homeMode = ref("draw");
+const publishText = ref("");
+const category = ref("观察");
+const intensity = ref<QuestIntensity>("light");
+const completionQuest = ref<AcceptedQuest | null>(null);
+
+const homeOptions = [
+  { value: "draw", label: "接取" },
+  { value: "publish", label: "发布" },
+];
+
+const categories = ["观察", "记录", "行动", "尝试", "探索", "随机"];
+
+function submitPublish() {
+  const task = store.publishTask({
+    text: publishText.value,
+    category: category.value,
+    intensity: intensity.value,
+  });
+
+  if (!task) {
+    return;
+  }
+
+  publishText.value = "";
+}
+
+function openCompletion(quest: AcceptedQuest) {
+  completionQuest.value = quest;
+}
+
+function completeQuest(payload: CompletionPayload) {
+  if (!completionQuest.value) {
+    return;
+  }
+
+  store.completeQuest(completionQuest.value.id, payload);
+  completionQuest.value = null;
+  router.push({ name: "journal", query: { filter: "done" } });
+}
+
+function openJournal(status: AcceptedQuestStatus) {
+  router.push({
+    name: "journal",
+    query: { filter: status === "done" ? "done" : "todo" },
+  });
+}
+</script>

@@ -1,0 +1,60 @@
+import type { QuestTask } from "@/types/quest";
+
+const baseTime = Date.now();
+
+export const seedTasks: QuestTask[] = [
+  {
+    id: "seed-1",
+    text: "给今天路过的一棵树拍一张证件照。",
+    category: "观察",
+    intensity: "light",
+    status: "approved",
+    source: "基础词库",
+    createdAt: baseTime - 86400000 * 9,
+  },
+  {
+    id: "seed-2",
+    text: "找一个平时会忽略的小物件，给它写三句话。",
+    category: "记录",
+    intensity: "light",
+    status: "approved",
+    source: "基础词库",
+    createdAt: baseTime - 86400000 * 8,
+  },
+  {
+    id: "seed-3",
+    text: "在熟悉的路上换一侧行走，记录一个新发现。",
+    category: "行动",
+    intensity: "light",
+    status: "approved",
+    source: "基础词库",
+    createdAt: baseTime - 86400000 * 7,
+  },
+  {
+    id: "seed-4",
+    text: "给未来三天后的自己留一句提醒。",
+    category: "记录",
+    intensity: "light",
+    status: "approved",
+    source: "基础词库",
+    createdAt: baseTime - 86400000 * 6,
+  },
+  {
+    id: "seed-5",
+    text: "买一瓶平时不会选的饮料，并给它打一个分数。",
+    category: "尝试",
+    intensity: "normal",
+    status: "approved",
+    source: "基础词库",
+    createdAt: baseTime - 86400000 * 5,
+  },
+  {
+    id: "seed-6",
+    text: "向一个陌生空间打招呼：车站、街角、楼梯间都可以。",
+    category: "探索",
+    intensity: "normal",
+    status: "approved",
+    source: "基础词库",
+    createdAt: baseTime - 86400000 * 4,
+  },
+];
