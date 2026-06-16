@@ -12,6 +12,30 @@
       @update:model-value="setFilter"
     />
 
+    <section class="journal-tools" aria-label="查找任务记录">
+      <label class="search-field">
+        <Search />
+        <input v-model="searchText" type="search" placeholder="搜索任务或感悟" />
+      </label>
+      <label class="field compact-field">
+        <span>类型</span>
+        <select v-model="categoryFilter">
+          <option value="">全部类型</option>
+          <option v-for="category in categoryOptions" :key="category" :value="category">
+            {{ category }}
+          </option>
+        </select>
+      </label>
+    </section>
+
+    <div class="section-title">
+      <p class="section-note">{{ resultSummary }}</p>
+      <button v-if="hasFilters" class="ghost-button small-button" type="button" @click="clearFilters">
+        <X />
+        <span>清除筛选</span>
+      </button>
+    </div>
+
     <section class="task-list">
       <article v-for="quest in items" :key="quest.id" class="list-card">
         <div class="tag-row">
@@ -56,7 +80,7 @@
 
       <div v-if="!items.length" class="empty-state">
         <img :src="questCardImage" alt="" />
-        <strong>{{ filter === "todo" ? "没有未完成任务" : "还没有完成记录" }}</strong>
+        <strong>{{ emptyText }}</strong>
       </div>
     </section>
 
@@ -70,7 +94,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { CheckCircle2, Pencil, Trash2, Undo2 } from "@lucide/vue";
+import { CheckCircle2, Pencil, Search, Trash2, Undo2, X } from "@lucide/vue";
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -89,6 +113,8 @@ const store = useQuestStore();
 const notice = useNoticeStore();
 const { todoQuests, doneQuests } = storeToRefs(store);
 const completionQuest = ref<AcceptedQuest | null>(null);
+const searchText = ref("");
+const categoryFilter = ref("");
 
 const journalOptions = [
   { value: "todo", label: "未完成" },
@@ -96,13 +122,47 @@ const journalOptions = [
 ];
 
 const filter = computed<JournalFilter>(() => (route.query.filter === "done" ? "done" : "todo"));
-const items = computed(() => (filter.value === "todo" ? todoQuests.value : doneQuests.value));
+const baseItems = computed(() => (filter.value === "todo" ? todoQuests.value : doneQuests.value));
+const hasFilters = computed(() => Boolean(searchText.value.trim() || categoryFilter.value));
+const categoryOptions = computed(() => {
+  return [...new Set(baseItems.value.map((quest) => quest.category))];
+});
+const items = computed(() => {
+  const keyword = searchText.value.trim().toLowerCase();
+
+  return baseItems.value.filter((quest) => {
+    const matchesCategory = !categoryFilter.value || quest.category === categoryFilter.value;
+    const searchableText = `${quest.text} ${quest.reflection} ${quest.category}`.toLowerCase();
+    const matchesKeyword = !keyword || searchableText.includes(keyword);
+
+    return matchesCategory && matchesKeyword;
+  });
+});
+const resultSummary = computed(() => {
+  if (!baseItems.value.length) {
+    return filter.value === "todo" ? "现在没有进行中的任务" : "现在还没有完成记录";
+  }
+
+  return hasFilters.value ? `找到 ${items.value.length} 条记录` : `共 ${items.value.length} 条记录`;
+});
+const emptyText = computed(() => {
+  if (baseItems.value.length) {
+    return "没有找到符合条件的记录";
+  }
+
+  return filter.value === "todo" ? "没有未完成任务" : "还没有完成记录";
+});
 
 function setFilter(value: string) {
   router.replace({
     name: "journal",
     query: { filter: value === "done" ? "done" : "todo" },
   });
+}
+
+function clearFilters() {
+  searchText.value = "";
+  categoryFilter.value = "";
 }
 
 function completeQuest(payload: CompletionPayload) {
