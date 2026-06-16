@@ -157,8 +157,15 @@ export async function deleteTask(token: string, taskId: number): Promise<void> {
 }
 
 // ---- 抽取任务 ----
-export async function drawQuest(token: string): Promise<AcceptedQuest> {
-  const res = await fetch(`${BASE_URL}/api/quests/draw`, {
+export async function drawQuest(
+  token: string,
+  params: { pool_id: string; light_only: boolean },
+): Promise<AcceptedQuest> {
+  const query = new URLSearchParams({
+    pool_id: params.pool_id,
+    light_only: String(params.light_only),
+  });
+  const res = await fetch(`${BASE_URL}/api/quests/draw?${query.toString()}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });

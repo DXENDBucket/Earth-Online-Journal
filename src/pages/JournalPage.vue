@@ -177,12 +177,12 @@ function clearFilters() {
   categoryFilter.value = "";
 }
 
-function completeQuest(payload: CompletionPayload) {
+async function completeQuest(payload: CompletionPayload) {
   if (!completionQuest.value) {
     return;
   }
 
-  const saved = store.completeQuest(completionQuest.value.id, payload);
+  const saved = await store.completeQuest(completionQuest.value.id, payload);
   completionQuest.value = null;
 
   if (!saved) {
@@ -193,18 +193,18 @@ function completeQuest(payload: CompletionPayload) {
   setFilter("done");
 }
 
-function returnQuest(quest: AcceptedQuest) {
-  if (store.returnQuest(quest.id)) {
+async function returnQuest(quest: AcceptedQuest) {
+  if (await store.returnQuest(quest.id)) {
     notice.showNotice("任务已放回卡池。", "success");
   }
 }
 
-function deleteRecord(quest: AcceptedQuest) {
+async function deleteRecord(quest: AcceptedQuest) {
   if (!window.confirm("要删除这条完成记录吗？")) {
     return;
   }
 
-  if (store.deleteAcceptedQuest(quest.id)) {
+  if (await store.deleteAcceptedQuest(quest.id)) {
     notice.showNotice("完成记录已删除。", "success");
   }
 }

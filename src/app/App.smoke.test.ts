@@ -79,7 +79,7 @@ describe("App smoke flow", () => {
 
     expect(wrapper.text()).toContain("我的");
     expect(wrapper.text()).toContain("这台设备上的记录");
-    expect(wrapper.text()).toContain("换设备或清理浏览器前，可以先下载一份备份。");
+    expect(wrapper.text()).toContain("任务和完成记录已同步到云端。");
     expect(wrapper.text()).not.toContain("当前版本");
 
     wrapper.unmount();

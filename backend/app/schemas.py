@@ -1,6 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
-from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
@@ -31,7 +29,7 @@ class TaskBase(BaseModel):
     intensity: str  # "light" | "normal"
 
 class TaskCreate(TaskBase):
-    pass
+    pool_id: str = "public"
 
 class TaskOut(TaskBase):
     id: int

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import random
-from app import models, schemas, auth
+from app import models, schemas
 from app.database import get_db
 from app.routers.users import get_current_user
 
@@ -32,7 +32,8 @@ def sync(current_user: models.User = Depends(get_current_user), db: Session = De
                 intensity=seed["intensity"],
                 source="基础词库",
                 status="approved",
-                approved_at=func.now()
+                approved_at=func.now(),
+                pool_id="public",
             )
             db.add(task)
         db.commit()
@@ -54,7 +55,7 @@ def publish(task_data: schemas.TaskCreate, current_user: models.User = Depends(g
     
     task = models.Task(
         user_id=current_user.id,
-        pool_id=task_data.pool_id or 'public',
+        pool_id=task_data.pool_id or "public",
         text=task_data.text.strip(),
         category=task_data.category,
         intensity=task_data.intensity,
@@ -99,20 +100,34 @@ def delete_task(task_id: int, current_user: models.User = Depends(get_current_us
 
 # ========== 抽取任务 ==========
 @router.post("/draw", response_model=schemas.AcceptedQuestOut)
-def draw_quest(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def draw_quest(
+    pool_id: str = "public",
+    light_only: bool = False,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     # 获取当前所有进行中的任务ID
     doing = db.query(models.AcceptedQuest.task_id).filter(
         models.AcceptedQuest.user_id == current_user.id,
-        models.AcceptedQuest.status == "todo"
+        models.AcceptedQuest.status == "todo",
+        models.AcceptedQuest.pool_id == pool_id,
     ).all()
     doing_ids = [d[0] for d in doing]
     
     # 可抽取池：已批准且不在进行中
-    pool = db.query(models.Task).filter(
+    pool_query = db.query(models.Task).filter(
         models.Task.user_id == current_user.id,
         models.Task.status == "approved",
-        ~models.Task.id.in_(doing_ids) if doing_ids else True
-    ).all()
+        models.Task.pool_id == pool_id,
+    )
+
+    if light_only:
+        pool_query = pool_query.filter(models.Task.intensity == "light")
+
+    if doing_ids:
+        pool_query = pool_query.filter(~models.Task.id.in_(doing_ids))
+
+    pool = pool_query.all()
     
     if not pool:
         raise HTTPException(status_code=400, detail="当前没有可抽取的任务")

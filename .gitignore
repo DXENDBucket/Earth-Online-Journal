@@ -3,9 +3,15 @@ dist/
 .vite/
 .devserver/
 .vite-dev*.log
+__pycache__/
+*.py[cod]
+backend/venv/
+backend/.venv/
+backend/eoj.db
 .env
 .env.*
 !.env.example
+!backend/.env.example
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

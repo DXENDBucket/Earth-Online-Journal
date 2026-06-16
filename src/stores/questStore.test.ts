@@ -11,15 +11,15 @@ describe("questStore", () => {
     setActivePinia(createPinia());
   });
 
-  it("publishes a task once and keeps duplicates out", () => {
+  it("publishes a task once and keeps duplicates out", async () => {
     const store = useQuestStore();
 
-    const created = store.publishTask({
+    const created = await store.publishTask({
       text: "Notice a detail on your way home",
       category: "观察",
       intensity: "light",
     });
-    const duplicate = store.publishTask({
+    const duplicate = await store.publishTask({
       text: "  notice   a detail on your way home  ",
       category: "观察",
       intensity: "light",
@@ -30,9 +30,9 @@ describe("questStore", () => {
     expect(store.pendingTasks).toHaveLength(1);
   });
 
-  it("draws a quest and saves a completion record", () => {
+  it("draws a quest and saves a completion record", async () => {
     const store = useQuestStore();
-    const draw = store.drawQuest();
+    const draw = await store.drawQuest();
 
     expect(draw.status).toBe("created");
 
@@ -41,7 +41,7 @@ describe("questStore", () => {
     }
 
     expect(store.todoQuests).toHaveLength(1);
-    expect(store.completeQuest(draw.quest.id, {
+    expect(await store.completeQuest(draw.quest.id, {
       reflection: "  I noticed the evening light.  ",
       photoName: "light.jpg",
       photoDataUrl: "data:image/jpeg;base64,test",
@@ -52,7 +52,7 @@ describe("questStore", () => {
     expect(store.doneQuests[0]?.photoName).toBe("light.jpg");
   });
 
-  it("switches between the public pool and an empty private pool", () => {
+  it("switches between the public pool and an empty private pool", async () => {
     const store = useQuestStore();
 
     expect(store.currentPool.name).toBe("公共池");
@@ -60,9 +60,9 @@ describe("questStore", () => {
     expect(store.setCurrentPool("private")).toBe(true);
     expect(store.currentPool.name).toBe("私人池");
     expect(store.approvedTasks).toHaveLength(0);
-    expect(store.drawQuest().status).toBe("empty");
+    expect((await store.drawQuest()).status).toBe("empty");
 
-    const created = store.publishTask({
+    const created = await store.publishTask({
       text: "Write a secret mission for myself",
       category: "记录",
       intensity: "light",
@@ -85,7 +85,7 @@ describe("questStore", () => {
     expect(reloaded.preferences.drawAnimation).toBe(false);
   });
 
-  it("returns storage-error when a change cannot be saved", () => {
+  it("returns storage-error when a change cannot be saved", async () => {
     const listener = vi.fn();
     window.addEventListener(QUEST_STORAGE_ERROR_EVENT, listener);
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
@@ -93,7 +93,7 @@ describe("questStore", () => {
     });
 
     const store = useQuestStore();
-    const result = store.publishTask({
+    const result = await store.publishTask({
       text: "Walk a different street for one block",
       category: "行动",
       intensity: "light",

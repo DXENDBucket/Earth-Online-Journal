@@ -113,11 +113,11 @@
           </div>
           <p>{{ task.text }}</p>
           <div class="item-actions">
-            <button class="primary-button" type="button" @click="store.approveTask(task.id)">
+            <button class="primary-button" type="button" @click="approveTask(task.id)">
               <BadgeCheck />
               <span>加入卡池</span>
             </button>
-            <button class="ghost-button" type="button" @click="store.removeTask(task.id)">
+            <button class="ghost-button" type="button" @click="removeTask(task.id)">
               <Undo2 />
               <span>撤回</span>
             </button>
@@ -208,8 +208,8 @@ const homeOptions = [
 
 const categories = ["观察", "记录", "行动", "尝试", "探索", "随机"];
 
-function submitPublish() {
-  const result = store.publishTask({
+async function submitPublish() {
+  const result = await store.publishTask({
     text: publishText.value,
     category: category.value,
     intensity: intensity.value,
@@ -233,12 +233,12 @@ function submitPublish() {
   notice.showNotice("任务卡已保存，确认后就会进入卡池。", "success");
 }
 
-function drawQuest() {
+async function drawQuest() {
   if (isDrawing.value) {
     return;
   }
 
-  const result = store.drawQuest();
+  const result = await store.drawQuest();
 
   if (result.status === "empty") {
     const message = approvedTasks.value.length
@@ -282,12 +282,12 @@ function openCompletion(quest: AcceptedQuest) {
   completionQuest.value = quest;
 }
 
-function completeQuest(payload: CompletionPayload) {
+async function completeQuest(payload: CompletionPayload) {
   if (!completionQuest.value) {
     return;
   }
 
-  const saved = store.completeQuest(completionQuest.value.id, payload);
+  const saved = await store.completeQuest(completionQuest.value.id, payload);
   completionQuest.value = null;
 
   if (!saved) {
@@ -298,9 +298,21 @@ function completeQuest(payload: CompletionPayload) {
   router.push({ name: "me", query: { tab: "journal", filter: "done" } });
 }
 
-function returnQuest(quest: AcceptedQuest) {
-  if (store.returnQuest(quest.id)) {
+async function returnQuest(quest: AcceptedQuest) {
+  if (await store.returnQuest(quest.id)) {
     notice.showNotice("任务已放回卡池。", "success");
+  }
+}
+
+async function approveTask(id: string) {
+  if (await store.approveTask(id)) {
+    notice.showNotice("任务卡已加入卡池。", "success");
+  }
+}
+
+async function removeTask(id: string) {
+  if (await store.removeTask(id)) {
+    notice.showNotice("任务卡已撤回。", "success");
   }
 }
 
