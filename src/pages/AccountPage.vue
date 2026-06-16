@@ -31,6 +31,26 @@
 
     <section class="panel">
       <div class="section-title">
+        <h2>个人资料</h2>
+      </div>
+      <form class="profile-form" @submit.prevent="saveProfile">
+        <label class="field">
+          <span>显示名称</span>
+          <input v-model="profileName" type="text" maxlength="24" placeholder="地球旅人" />
+        </label>
+        <label class="field">
+          <span>编号</span>
+          <input v-model="profileHandle" type="text" maxlength="24" placeholder="EOJ-2049" />
+        </label>
+        <button class="primary-button" type="submit">
+          <Save />
+          <span>保存资料</span>
+        </button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
         <h2>偏好</h2>
       </div>
       <div class="settings-list">
@@ -71,8 +91,8 @@
 </template>
 
 <script setup lang="ts">
-import { Download, RotateCcw, Upload } from "@lucide/vue";
-import { computed } from "vue";
+import { Download, RotateCcw, Save, Upload } from "@lucide/vue";
+import { computed, ref, watch } from "vue";
 
 import type { QuestStoreSnapshot } from "@/services/localQuestStorage";
 import { useNoticeStore } from "@/stores/noticeStore";
@@ -80,11 +100,29 @@ import { useQuestStore } from "@/stores/questStore";
 
 const store = useQuestStore();
 const notice = useNoticeStore();
+const profileName = ref(store.user.name);
+const profileHandle = ref(store.user.handle);
 
 const lightOnly = computed({
   get: () => store.preferences.lightOnly,
   set: (value: boolean) => store.setLightOnly(value),
 });
+
+watch(
+  () => [store.user.name, store.user.handle],
+  ([name, handle]) => {
+    profileName.value = name;
+    profileHandle.value = handle;
+  },
+);
+
+function saveProfile() {
+  store.updateUserProfile({
+    name: profileName.value,
+    handle: profileHandle.value,
+  });
+  notice.showNotice("个人资料已保存。", "success");
+}
 
 function clearLocalProgress() {
   if (window.confirm("要清空这台设备上的任务和完成记录吗？")) {

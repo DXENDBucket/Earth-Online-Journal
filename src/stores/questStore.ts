@@ -140,6 +140,12 @@ export const useQuestStore = defineStore("quests", () => {
     persist();
   }
 
+  function updateUserProfile(nextUser: UserProfile) {
+    user.name = nextUser.name.trim() || "地球旅人";
+    user.handle = nextUser.handle.trim() || "EOJ-2049";
+    persist();
+  }
+
   function clearLocalProgress() {
     clearQuestSnapshot();
     const fresh = createInitialSnapshot();
@@ -200,6 +206,7 @@ export const useQuestStore = defineStore("quests", () => {
     drawQuest,
     completeQuest,
     setLightOnly,
+    updateUserProfile,
     clearLocalProgress,
     getSnapshot,
     importSnapshot,
