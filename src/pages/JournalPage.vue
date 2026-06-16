@@ -32,6 +32,16 @@
           :src="quest.photoDataUrl"
           :alt="quest.photoName ? `完成照片：${quest.photoName}` : '完成照片'"
         />
+        <div v-if="quest.status === 'done'" class="item-actions">
+          <button class="secondary-button" type="button" @click="completionQuest = quest">
+            <Pencil />
+            <span>编辑记录</span>
+          </button>
+          <button class="danger-button" type="button" @click="deleteRecord(quest)">
+            <Trash2 />
+            <span>删除记录</span>
+          </button>
+        </div>
         <div v-if="quest.status !== 'done'" class="item-actions">
           <button class="primary-button" type="button" @click="completionQuest = quest">
             <CheckCircle2 />
@@ -60,7 +70,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { CheckCircle2, Undo2 } from "@lucide/vue";
+import { CheckCircle2, Pencil, Trash2, Undo2 } from "@lucide/vue";
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -109,6 +119,16 @@ function completeQuest(payload: CompletionPayload) {
 function returnQuest(quest: AcceptedQuest) {
   if (store.returnQuest(quest.id)) {
     notice.showNotice("任务已放回卡池。", "success");
+  }
+}
+
+function deleteRecord(quest: AcceptedQuest) {
+  if (!window.confirm("要删除这条完成记录吗？")) {
+    return;
+  }
+
+  if (store.deleteAcceptedQuest(quest.id)) {
+    notice.showNotice("完成记录已删除。", "success");
   }
 }
 

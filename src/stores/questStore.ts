@@ -130,11 +130,28 @@ export const useQuestStore = defineStore("quests", () => {
     }
 
     quest.status = "done";
-    quest.completedAt = Date.now();
+    quest.completedAt = quest.completedAt || Date.now();
     quest.reflection = payload.reflection.trim();
     quest.photoName = payload.photoName;
     quest.photoDataUrl = payload.photoDataUrl;
     persist();
+  }
+
+  function deleteAcceptedQuest(id: string) {
+    const index = accepted.value.findIndex((quest) => quest.id === id);
+
+    if (index < 0) {
+      return false;
+    }
+
+    accepted.value.splice(index, 1);
+
+    if (currentDrawId.value === id) {
+      currentDrawId.value = todoQuests.value[0]?.id || "";
+    }
+
+    persist();
+    return true;
   }
 
   function returnQuest(id: string) {
@@ -224,6 +241,7 @@ export const useQuestStore = defineStore("quests", () => {
     removeTask,
     drawQuest,
     completeQuest,
+    deleteAcceptedQuest,
     returnQuest,
     setLightOnly,
     updateUserProfile,

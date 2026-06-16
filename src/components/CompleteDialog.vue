@@ -3,7 +3,7 @@
     <form class="dialog-panel" @submit.prevent="submit">
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">确认完成</p>
+          <p class="eyebrow">{{ dialogLabel }}</p>
           <h2>{{ quest?.text || "任务回收" }}</h2>
         </div>
         <button class="icon-button" type="button" aria-label="关闭" @click="close">
@@ -30,7 +30,7 @@
         <button class="ghost-button" type="button" @click="close">再等等</button>
         <button class="primary-button" type="submit" :disabled="isPreparingPhoto">
           <Check />
-          <span>{{ isPreparingPhoto ? "整理照片中" : "完成" }}</span>
+          <span>{{ submitLabel }}</span>
         </button>
       </div>
     </form>
@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { Check, Trash2, X } from "@lucide/vue";
-import { nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 
 import type { AcceptedQuest, CompletionPayload } from "@/types/quest";
 
@@ -60,6 +60,15 @@ const photoPreview = ref("");
 const photoMessage = ref("");
 const isPreparingPhoto = ref(false);
 const closingFromCode = ref(false);
+
+const dialogLabel = computed(() => (props.quest?.status === "done" ? "编辑记录" : "确认完成"));
+const submitLabel = computed(() => {
+  if (isPreparingPhoto.value) {
+    return "整理照片中";
+  }
+
+  return props.quest?.status === "done" ? "保存记录" : "完成";
+});
 
 watch(
   () => props.quest,
