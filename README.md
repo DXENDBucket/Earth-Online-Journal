@@ -21,6 +21,12 @@ npm run dev:pages
 npm run preview:pages
 ```
 
+自动检查 GitHub Pages 路径能否打开：
+
+```bash
+npm run test:pages
+```
+
 ## 检查构建
 
 ```bash

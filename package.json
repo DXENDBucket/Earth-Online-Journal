@@ -12,6 +12,7 @@
     "deploy": "npm run build:pages && gh-pages -d dist",
     "preview": "vite preview",
     "preview:pages": "npm run build:pages && vite preview --host 127.0.0.1 --base=/Earth-Online-Journal/",
+    "test:pages": "npm run build:pages && node scripts/smoke-pages-preview.mjs",
     "test:unit": "vitest run --environment jsdom",
     "typecheck": "vue-tsc --noEmit"
   },
