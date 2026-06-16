@@ -43,25 +43,19 @@ npm run test:unit
 
 ## GitHub Pages 发布
 
-项目支持两种发布方式。
-
-### 手动发布
-
-```bash
-npm run deploy
-```
-
-这会构建站点，并把 `dist` 发布到 `gh-pages` 分支。
-
-### 自动发布
-
-项目也包含 GitHub Pages 工作流：`.github/workflows/deploy.yml`。
+项目使用 GitHub Actions 自动发布，不再把构建产物推到 `gh-pages` 分支。
 
 首次使用时，在 GitHub 仓库中打开：
 
 `Settings -> Pages -> Build and deployment -> Source -> GitHub Actions`
 
-之后推送到 `main` 分支会自动构建并发布。发布地址通常是：
+发布前可以在本地跑完整验收：
+
+```bash
+npm run deploy
+```
+
+之后提交并推送到 `main` 分支，`.github/workflows/deploy.yml` 会自动构建并发布。发布地址通常是：
 
 `https://dxendbucket.github.io/Earth-Online-Journal/`
 
