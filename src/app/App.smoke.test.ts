@@ -46,7 +46,7 @@ describe("App smoke flow", () => {
     await wrapper.get("dialog form").trigger("submit");
     await flushPromises();
 
-    expect(router.currentRoute.value.name).toBe("journal");
+    expect(router.currentRoute.value.name).toBe("me");
     expect(router.currentRoute.value.query.filter).toBe("done");
     expect(wrapper.text()).toContain("完成记录已保存。");
     expect(wrapper.text()).toContain("今天认真观察了一件小事。");
@@ -58,6 +58,12 @@ describe("App smoke flow", () => {
     expect(wrapper.text()).toContain("全部任务");
     expect(wrapper.text()).toContain("可抽任务");
 
+    await router.push({ name: "journal" });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("先留一个入口");
+    expect(wrapper.text()).toContain("这里还没有内容");
+
     await router.push({ name: "rank" });
     await flushPromises();
 
@@ -67,9 +73,10 @@ describe("App smoke flow", () => {
     expect(wrapper.text()).toContain("最近完成");
     expect(wrapper.text()).toContain("今天认真观察了一件小事。");
 
-    await router.push({ name: "account" });
+    await router.push({ name: "me", query: { tab: "profile" } });
     await flushPromises();
 
+    expect(wrapper.text()).toContain("我的");
     expect(wrapper.text()).toContain("这台设备上的记录");
     expect(wrapper.text()).toContain("换设备或清理浏览器前，可以先下载一份备份。");
     expect(wrapper.text()).not.toContain("当前版本");

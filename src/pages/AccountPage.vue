@@ -1,6 +1,6 @@
 <template>
   <section class="screen">
-    <div class="screen-title">
+    <div v-if="!props.embedded" class="screen-title">
       <p class="eyebrow">账号</p>
       <h1>我的记录</h1>
     </div>
@@ -98,6 +98,14 @@ import type { QuestStoreSnapshot } from "@/services/localQuestStorage";
 import { useNoticeStore } from "@/stores/noticeStore";
 import { useQuestStore } from "@/stores/questStore";
 
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+  }>(),
+  {
+    embedded: false,
+  },
+);
 const store = useQuestStore();
 const notice = useNoticeStore();
 const profileName = ref(store.user.name);

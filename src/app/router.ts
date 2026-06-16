@@ -1,8 +1,8 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 
-import AccountPage from "@/pages/AccountPage.vue";
 import HomePage from "@/pages/HomePage.vue";
-import JournalPage from "@/pages/JournalPage.vue";
+import MyPage from "@/pages/MyPage.vue";
+import PlaceholderPage from "@/pages/PlaceholderPage.vue";
 import PoolPage from "@/pages/PoolPage.vue";
 import RankPage from "@/pages/RankPage.vue";
 
@@ -17,7 +17,7 @@ export const router = createRouter({
     {
       path: "/journal",
       name: "journal",
-      component: JournalPage,
+      component: PlaceholderPage,
     },
     {
       path: "/pool",
@@ -30,9 +30,13 @@ export const router = createRouter({
       component: RankPage,
     },
     {
+      path: "/me",
+      name: "me",
+      component: MyPage,
+    },
+    {
       path: "/account",
-      name: "account",
-      component: AccountPage,
+      redirect: { name: "me" },
     },
   ],
 });

@@ -1,6 +1,6 @@
 <template>
   <section class="screen">
-    <div class="screen-title">
+    <div v-if="!props.embedded" class="screen-title">
       <p class="eyebrow">任务册</p>
       <h1>未完成 / 已完成</h1>
     </div>
@@ -107,6 +107,14 @@ import type { AcceptedQuest, CompletionPayload } from "@/types/quest";
 
 type JournalFilter = "todo" | "done";
 
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+  }>(),
+  {
+    embedded: false,
+  },
+);
 const route = useRoute();
 const router = useRouter();
 const store = useQuestStore();
@@ -155,8 +163,12 @@ const emptyText = computed(() => {
 
 function setFilter(value: string) {
   router.replace({
-    name: "journal",
-    query: { filter: value === "done" ? "done" : "todo" },
+    name: "me",
+    query: {
+      ...route.query,
+      tab: "journal",
+      filter: value === "done" ? "done" : "todo",
+    },
   });
 }
 

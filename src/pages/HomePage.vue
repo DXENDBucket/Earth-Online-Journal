@@ -250,7 +250,7 @@ function completeQuest(payload: CompletionPayload) {
   }
 
   notice.showNotice("完成记录已保存。", "success");
-  router.push({ name: "journal", query: { filter: "done" } });
+  router.push({ name: "me", query: { tab: "journal", filter: "done" } });
 }
 
 function returnQuest(quest: AcceptedQuest) {
@@ -261,8 +261,11 @@ function returnQuest(quest: AcceptedQuest) {
 
 function openJournal(status: AcceptedQuestStatus) {
   router.push({
-    name: "journal",
-    query: { filter: status === "done" ? "done" : "todo" },
+    name: "me",
+    query: {
+      tab: "journal",
+      filter: status === "done" ? "done" : "todo",
+    },
   });
 }
 </script>
