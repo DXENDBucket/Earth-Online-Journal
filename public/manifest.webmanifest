@@ -1,0 +1,25 @@
+{
+  "name": "Earth Online Journal",
+  "short_name": "Earth Journal",
+  "description": "抽取现实任务，记录今天在地球上的一点行动。",
+  "lang": "zh-CN",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f7fbf3",
+  "theme_color": "#f7fbf3",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
