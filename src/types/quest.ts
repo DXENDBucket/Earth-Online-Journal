@@ -24,6 +24,7 @@ export interface AcceptedQuest {
   completedAt: number | null;
   reflection: string;
   photoName: string;
+  photoDataUrl?: string;
 }
 
 export interface QuestPreferences {
@@ -38,6 +39,7 @@ export interface UserProfile {
 export interface CompletionPayload {
   reflection: string;
   photoName: string;
+  photoDataUrl: string;
 }
 
 export interface PublishQuestPayload {

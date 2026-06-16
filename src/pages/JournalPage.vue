@@ -24,9 +24,15 @@
         <p>{{ quest.text }}</p>
         <div v-if="quest.status === 'done'" class="list-meta">
           <span v-if="quest.reflection">感悟：{{ quest.reflection }}</span>
-          <span v-if="quest.photoName">照片：{{ quest.photoName }}</span>
+          <span v-if="quest.photoName">照片已保存</span>
         </div>
-        <div v-else class="item-actions">
+        <img
+          v-if="quest.status === 'done' && quest.photoDataUrl"
+          class="completion-photo"
+          :src="quest.photoDataUrl"
+          :alt="quest.photoName ? `完成照片：${quest.photoName}` : '完成照片'"
+        />
+        <div v-if="quest.status !== 'done'" class="item-actions">
           <button class="primary-button" type="button" @click="completionQuest = quest">
             <CheckCircle2 />
             <span>确认完成</span>

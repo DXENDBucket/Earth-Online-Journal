@@ -113,6 +113,7 @@ export const useQuestStore = defineStore("quests", () => {
       completedAt: null,
       reflection: "",
       photoName: "",
+      photoDataUrl: "",
     };
 
     accepted.value.unshift(quest);
@@ -132,6 +133,7 @@ export const useQuestStore = defineStore("quests", () => {
     quest.completedAt = Date.now();
     quest.reflection = payload.reflection.trim();
     quest.photoName = payload.photoName;
+    quest.photoDataUrl = payload.photoDataUrl;
     persist();
   }
 
