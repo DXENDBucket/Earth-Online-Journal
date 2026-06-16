@@ -9,6 +9,18 @@ npm install
 npm run dev
 ```
 
+如果想按 GitHub Pages 的路径本地试用：
+
+```bash
+npm run dev:pages
+```
+
+发布前预览构建产物：
+
+```bash
+npm run preview:pages
+```
+
 ## 检查构建
 
 ```bash
