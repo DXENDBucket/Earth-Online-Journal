@@ -67,7 +67,7 @@
         <div class="setting-row">
           <div>
             <strong>这台设备上的记录</strong>
-            <p>当前版本会把任务和完成记录保存在本机浏览器里。</p>
+            <p>任务和完成记录会保存在这台设备里。换设备或清理浏览器前，可以先下载一份备份。</p>
           </div>
         </div>
         <div class="account-actions">

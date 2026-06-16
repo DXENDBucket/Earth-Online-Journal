@@ -59,6 +59,13 @@ describe("App smoke flow", () => {
     expect(wrapper.text()).toContain("最近完成");
     expect(wrapper.text()).toContain("今天认真观察了一件小事。");
 
+    await router.push({ name: "account" });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("这台设备上的记录");
+    expect(wrapper.text()).toContain("换设备或清理浏览器前，可以先下载一份备份。");
+    expect(wrapper.text()).not.toContain("当前版本");
+
     wrapper.unmount();
   });
 });
