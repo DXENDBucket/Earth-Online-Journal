@@ -50,16 +50,37 @@
     <section v-if="homeMode === 'draw'" class="panel">
       <div class="section-title">
         <h2>任务卡池</h2>
-        <small>{{ approvedTasks.length }} 条</small>
+        <small>{{ visiblePoolTasks.length }} 张</small>
+      </div>
+      <section class="journal-tools" aria-label="筛选任务卡池">
+        <label class="field compact-field">
+          <span>类型</span>
+          <select v-model="poolCategory">
+            <option value="">全部类型</option>
+            <option v-for="item in poolCategoryOptions" :key="item" :value="item">
+              {{ item }}
+            </option>
+          </select>
+        </label>
+        <button v-if="poolCategory" class="ghost-button small-button" type="button" @click="poolCategory = ''">
+          <X />
+          <span>清除筛选</span>
+        </button>
+      </section>
+      <div class="section-title">
+        <p class="section-note">{{ poolSummary }}</p>
       </div>
       <div class="task-list">
-        <article v-for="task in approvedTasks.slice(0, 4)" :key="task.id" class="list-card">
+        <article v-for="task in visiblePoolTasks" :key="task.id" class="list-card">
           <div class="tag-row">
             <span class="tag green">{{ task.category }}</span>
             <span class="tag">{{ task.source }}</span>
           </div>
           <p>{{ task.text }}</p>
         </article>
+        <div v-if="!visiblePoolTasks.length" class="empty-state">
+          <strong>没有找到这个类型的任务卡</strong>
+        </div>
       </div>
     </section>
 
@@ -163,9 +184,9 @@
 </template>
 
 <script setup lang="ts">
-import { BadgeCheck, Dice5, Send, Undo2 } from "@lucide/vue";
+import { BadgeCheck, Dice5, Send, Undo2, X } from "@lucide/vue";
 import { storeToRefs } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import questCardImage from "@/assets/quest-card.png";
@@ -198,6 +219,7 @@ const publishText = ref("");
 const category = ref("观察");
 const intensity = ref<QuestIntensity>("light");
 const completionQuest = ref<AcceptedQuest | null>(null);
+const poolCategory = ref("");
 
 const homeOptions = [
   { value: "draw", label: "接取" },
@@ -205,6 +227,21 @@ const homeOptions = [
 ];
 
 const categories = ["观察", "记录", "行动", "尝试", "探索", "随机"];
+const poolCategoryOptions = computed(() => [...new Set(approvedTasks.value.map((task) => task.category))]);
+const visiblePoolTasks = computed(() => {
+  if (!poolCategory.value) {
+    return approvedTasks.value;
+  }
+
+  return approvedTasks.value.filter((task) => task.category === poolCategory.value);
+});
+const poolSummary = computed(() => {
+  if (!poolCategory.value) {
+    return `卡池里共有 ${approvedTasks.value.length} 张任务卡`;
+  }
+
+  return `${poolCategory.value}类型有 ${visiblePoolTasks.value.length} 张任务卡`;
+});
 
 function submitPublish() {
   const result = store.publishTask({
