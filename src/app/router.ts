@@ -3,6 +3,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import AccountPage from "@/pages/AccountPage.vue";
 import HomePage from "@/pages/HomePage.vue";
 import JournalPage from "@/pages/JournalPage.vue";
+import PoolPage from "@/pages/PoolPage.vue";
 import RankPage from "@/pages/RankPage.vue";
 
 export const router = createRouter({
@@ -17,6 +18,11 @@ export const router = createRouter({
       path: "/journal",
       name: "journal",
       component: JournalPage,
+    },
+    {
+      path: "/pool",
+      name: "pool",
+      component: PoolPage,
     },
     {
       path: "/rank",

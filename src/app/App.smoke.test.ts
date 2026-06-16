@@ -24,6 +24,7 @@ describe("App smoke flow", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("发布/接取");
+    expect(wrapper.text()).toContain("卡池");
 
     await wrapper.get("button.draw-button").trigger("click");
     await flushPromises();
@@ -49,6 +50,13 @@ describe("App smoke flow", () => {
     expect(router.currentRoute.value.query.filter).toBe("done");
     expect(wrapper.text()).toContain("完成记录已保存。");
     expect(wrapper.text()).toContain("今天认真观察了一件小事。");
+
+    await router.push({ name: "pool" });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("任务卡池");
+    expect(wrapper.text()).toContain("全部任务");
+    expect(wrapper.text()).toContain("可抽任务");
 
     await router.push({ name: "rank" });
     await flushPromises();
