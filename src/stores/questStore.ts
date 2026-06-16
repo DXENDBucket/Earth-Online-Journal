@@ -1,65 +1,54 @@
-import { defineStore } from "pinia";
-import { computed, reactive, ref } from "vue";
+import { defineStore } from 'pinia';
+import { computed, reactive, ref } from 'vue';
+import { useAuthStore } from './authStore';
+import * as api from '@/services/apiClient';
+import type { Task, AcceptedQuest } from '@/services/apiClient';
 
-import {
-  clearQuestSnapshot,
-  createInitialSnapshot,
-  loadQuestSnapshot,
-  normalizeQuestSnapshot,
-  saveQuestSnapshot,
-} from "@/services/localQuestStorage";
-import type { QuestStoreSnapshot } from "@/services/localQuestStorage";
-import type {
-  AcceptedQuest,
-  CompletionPayload,
-  DrawQuestResult,
-  PublishQuestPayload,
-  PublishQuestResult,
-  QuestPreferences,
-  QuestPool,
-  QuestTask,
-  UserProfile,
-} from "@/types/quest";
+export const useQuestStore = defineStore('quests', () => {
+  const authStore = useAuthStore();
 
-export const useQuestStore = defineStore("quests", () => {
-  const snapshot = loadQuestSnapshot();
+  const tasks = ref<Task[]>([]);
+  const accepted = ref<AcceptedQuest[]>([]);
+  const preferences = reactive({
+    lightOnly: false,
+    drawAnimation: true,
+    selectedPoolId: 'public',
+  });
+  const currentDrawId = ref<number | null>(null);
+  const user = reactive({ name: '地球旅人', handle: 'EOJ-2049' });
 
-  const pools = ref<QuestPool[]>(snapshot.pools);
-  const tasks = ref<QuestTask[]>(snapshot.tasks);
-  const accepted = ref<AcceptedQuest[]>(snapshot.accepted);
-  const preferences = reactive<QuestPreferences>(snapshot.preferences);
-  const currentDrawId = ref(snapshot.currentDrawId);
-  const user = reactive<UserProfile>(snapshot.user);
+  const pools = [
+    { id: 'public', name: '公共池', description: '默认任务池', kind: 'public' },
+    { id: 'private', name: '私人池', description: '只放你自己的小任务', kind: 'private' },
+  ];
 
+  const currentPoolId = computed(() => preferences.selectedPoolId);
   const currentPool = computed(() => {
-    return pools.value.find((pool) => pool.id === preferences.selectedPoolId) || pools.value[0];
+    return pools.find(p => p.id === preferences.selectedPoolId) || pools[0];
   });
-  const currentPoolId = computed(() => currentPool.value.id);
-  const tasksInCurrentPool = computed(() => tasks.value.filter((task) => task.poolId === currentPoolId.value));
-  const acceptedInCurrentPool = computed(() =>
-    accepted.value.filter((quest) => quest.poolId === currentPoolId.value),
-  );
-  const approvedTasks = computed(() => tasksInCurrentPool.value.filter((task) => task.status === "approved"));
-  const pendingTasks = computed(() => tasksInCurrentPool.value.filter((task) => task.status === "pending"));
-  const todoQuests = computed(() => acceptedInCurrentPool.value.filter((quest) => quest.status === "todo"));
-  const doneQuests = computed(() => acceptedInCurrentPool.value.filter((quest) => quest.status === "done"));
-  const activeTaskIds = computed(() => new Set(todoQuests.value.map((quest) => quest.taskId)));
 
+  const tasksInCurrentPool = computed(() => tasks.value.filter(t => t.pool_id === currentPoolId.value));
+  const acceptedInCurrentPool = computed(() => accepted.value.filter(q => q.pool_id === currentPoolId.value));
+  const approvedTasks = computed(() => tasksInCurrentPool.value.filter(t => t.status === 'approved'));
+  const pendingTasks = computed(() => tasksInCurrentPool.value.filter(t => t.status === 'pending'));
+  const todoQuests = computed(() => acceptedInCurrentPool.value.filter(q => q.status === 'todo'));
+  const doneQuests = computed(() => acceptedInCurrentPool.value.filter(q => q.status === 'done'));
+  const activeTaskIds = computed(() => new Set(todoQuests.value.map(q => q.task_id)));
   const drawPool = computed(() =>
-    approvedTasks.value.filter((task) => {
-      const matchesPreference = !preferences.lightOnly || task.intensity === "light";
-      return matchesPreference && !activeTaskIds.value.has(task.id);
-    }),
+    approvedTasks.value.filter(t => {
+      const matchesPreference = !preferences.lightOnly || t.intensity === 'light';
+      return matchesPreference && !activeTaskIds.value.has(t.id);
+    })
   );
-
   const currentDraw = computed(() => {
-    return accepted.value.find((quest) => quest.id === currentDrawId.value) || todoQuests.value[0] || null;
+    if (currentDrawId.value) {
+      return accepted.value.find(q => q.id === currentDrawId.value) || null;
+    }
+    return todoQuests.value[0] || null;
   });
-
   const userApprovedTasks = computed(() =>
-    tasksInCurrentPool.value.filter((task) => task.source === "用户发布" && task.status === "approved"),
+    tasksInCurrentPool.value.filter(t => t.source === '用户发布' && t.status === 'approved')
   );
-
   const stats = computed(() => ({
     approved: approvedTasks.value.length,
     pending: pendingTasks.value.length,
@@ -68,211 +57,167 @@ export const useQuestStore = defineStore("quests", () => {
     userApproved: userApprovedTasks.value.length,
   }));
 
-  function publishTask(payload: PublishQuestPayload): PublishQuestResult {
+  // ---- 从服务器同步 ----
+  async function syncFromServer() {
+    if (!authStore.isLoggedIn()) return;
+    const data = await api.sync(authStore.token);
+    tasks.value = data.tasks;
+    accepted.value = data.accepted;
+    if (currentDrawId.value && !accepted.value.find(q => q.id === currentDrawId.value)) {
+      currentDrawId.value = todoQuests.value[0]?.id || null;
+    }
+  }
+
+  // ---- 发布任务 ----
+  async function publishTask(payload: { text: string; category: string; intensity: string }) {
     const text = payload.text.trim();
-
-    if (!text) {
-      return { status: "empty" };
+    if (!text) return { status: 'empty' };
+    try {
+      const task = await api.publishTask(authStore.token, {
+        text,
+        category: payload.category,
+        intensity: payload.intensity,
+        pool_id: currentPoolId.value,
+      });
+      tasks.value.unshift(task);
+      return { status: 'created', task };
+    } catch (err: any) {
+      if (err.message?.includes('已经在你的卡池里')) return { status: 'duplicate' };
+      return { status: 'storage-error' };
     }
-
-    if (hasSameTask(text)) {
-      return { status: "duplicate" };
-    }
-
-    const task: QuestTask = {
-      id: uid("task"),
-      poolId: currentPoolId.value,
-      text,
-      category: payload.category,
-      intensity: payload.intensity,
-      status: "pending",
-      source: "用户发布",
-      createdAt: Date.now(),
-    };
-
-    tasks.value.unshift(task);
-    return persist() ? { status: "created", task } : { status: "storage-error", task };
   }
 
-  function hasSameTask(text: string) {
-    const normalizedText = normalizeTaskText(text);
-    return tasks.value.some((task) => normalizeTaskText(task.text) === normalizedText);
+  // ---- 批准任务 ----
+  async function approveTask(id: number) {
+    const task = await api.approveTask(authStore.token, id);
+    const index = tasks.value.findIndex(t => t.id === id);
+    if (index >= 0) tasks.value[index] = task;
   }
 
-  function approveTask(id: string) {
-    const task = tasks.value.find((item) => item.id === id);
+  // ---- 撤回任务 ----
+  async function removeTask(id: number) {
+    await api.deleteTask(authStore.token, id);
+    tasks.value = tasks.value.filter(t => t.id !== id);
+  }
 
-    if (!task) {
-      return;
+  // ---- 抽取任务 ----
+  async function drawQuest() {
+    try {
+      const quest = await api.drawQuest(authStore.token);
+      accepted.value.unshift(quest);
+      currentDrawId.value = quest.id;
+      return { status: 'created', quest };
+    } catch (err: any) {
+      if (err.message?.includes('没有可抽取的任务')) return { status: 'empty' };
+      return { status: 'storage-error' };
     }
-
-    task.status = "approved";
-    task.approvedAt = Date.now();
-    persist();
   }
 
-  function removeTask(id: string) {
-    const index = tasks.value.findIndex((task) => task.id === id);
-
-    if (index < 0) {
-      return;
-    }
-
-    tasks.value.splice(index, 1);
-    persist();
-  }
-
-  function drawQuest(): DrawQuestResult {
-    if (!drawPool.value.length) {
-      return { status: "empty" };
-    }
-
-    const picked = drawPool.value[Math.floor(Math.random() * drawPool.value.length)];
-    const quest: AcceptedQuest = {
-      id: uid("accepted"),
-      poolId: picked.poolId,
-      taskId: picked.id,
-      text: picked.text,
-      category: picked.category,
-      source: picked.source,
-      status: "todo",
-      acceptedAt: Date.now(),
-      completedAt: null,
-      reflection: "",
-      photoName: "",
-      photoDataUrl: "",
-    };
-
-    accepted.value.unshift(quest);
-    currentDrawId.value = quest.id;
-    return persist() ? { status: "created", quest } : { status: "storage-error", quest };
-  }
-
-  function completeQuest(id: string, payload: CompletionPayload) {
-    const quest = accepted.value.find((item) => item.id === id);
-
-    if (!quest) {
+  // ---- 完成任务 ----
+  async function completeQuest(id: number, payload: { reflection: string; photoName: string; photoDataUrl: string }) {
+    try {
+      const quest = await api.completeQuest(authStore.token, id, {
+        reflection: payload.reflection,
+        photo_name: payload.photoName,
+        photo_data_url: payload.photoDataUrl,
+      });
+      const index = accepted.value.findIndex(q => q.id === id);
+      if (index >= 0) accepted.value[index] = quest;
+      if (currentDrawId.value === id) currentDrawId.value = todoQuests.value[0]?.id || null;
+      return true;
+    } catch {
       return false;
     }
-
-    quest.status = "done";
-    quest.completedAt = quest.completedAt || Date.now();
-    quest.reflection = payload.reflection.trim();
-    quest.photoName = payload.photoName;
-    quest.photoDataUrl = payload.photoDataUrl;
-    return persist();
   }
 
-  function deleteAcceptedQuest(id: string) {
-    const index = accepted.value.findIndex((quest) => quest.id === id);
-
-    if (index < 0) {
+  // ---- 放回卡池 ----
+  async function returnQuest(id: number) {
+    try {
+      await api.returnQuest(authStore.token, id);
+      accepted.value = accepted.value.filter(q => q.id !== id);
+      if (currentDrawId.value === id) currentDrawId.value = todoQuests.value[0]?.id || null;
+      return true;
+    } catch {
       return false;
     }
-
-    accepted.value.splice(index, 1);
-
-    if (currentDrawId.value === id) {
-      currentDrawId.value = todoQuests.value[0]?.id || "";
-    }
-
-    return persist();
   }
 
-  function returnQuest(id: string) {
-    const index = accepted.value.findIndex((quest) => quest.id === id && quest.status === "todo");
-
-    if (index < 0) {
+  // ---- 删除已完成记录 ----
+  async function deleteAcceptedQuest(id: number) {
+    try {
+      await api.deleteAcceptedQuest(authStore.token, id);
+      accepted.value = accepted.value.filter(q => q.id !== id);
+      return true;
+    } catch {
       return false;
     }
-
-    accepted.value.splice(index, 1);
-
-    if (currentDrawId.value === id) {
-      currentDrawId.value = todoQuests.value[0]?.id || "";
-    }
-
-    return persist();
   }
 
+  // ---- 偏好设置 ----
   function setLightOnly(value: boolean) {
     preferences.lightOnly = value;
-    return persist();
+    localStorage.setItem('eoj_preferences', JSON.stringify({ ...preferences }));
   }
-
   function setDrawAnimation(value: boolean) {
     preferences.drawAnimation = value;
-    return persist();
+    localStorage.setItem('eoj_preferences', JSON.stringify({ ...preferences }));
   }
-
   function setCurrentPool(poolId: string) {
-    if (!pools.value.some((pool) => pool.id === poolId)) {
-      return false;
-    }
-
+    if (!pools.some(p => p.id === poolId)) return false;
     preferences.selectedPoolId = poolId;
-    currentDrawId.value = todoQuests.value[0]?.id || "";
-    return persist();
+    localStorage.setItem('eoj_preferences', JSON.stringify({ ...preferences }));
+    currentDrawId.value = todoQuests.value[0]?.id || null;
+    return true;
   }
 
-  function updateUserProfile(nextUser: UserProfile) {
-    user.name = nextUser.name.trim() || "地球旅人";
-    user.handle = nextUser.handle.trim() || "EOJ-2049";
-    return persist();
+  // ---- 用户资料（保持接口兼容） ----
+  function updateUserProfile(profile: { name: string; handle: string }) {
+    // 此函数已废弃，由 authStore 处理，保留空实现防止报错
+    return true;
   }
 
+  // ---- 清空本机偏好 ----
   function clearLocalProgress() {
-    clearQuestSnapshot();
-    const fresh = createInitialSnapshot();
-    applySnapshot(fresh);
-    return persist();
+    localStorage.removeItem('eoj_preferences');
+    Object.assign(preferences, { lightOnly: false, drawAnimation: true, selectedPoolId: 'public' });
+    return true;
   }
 
-  function getSnapshot(): QuestStoreSnapshot {
+  // ---- 导出/导入 ----
+  function getSnapshot() {
     return {
-      pools: pools.value,
       tasks: tasks.value,
       accepted: accepted.value,
       preferences: { ...preferences },
-      currentDrawId: currentDrawId.value,
-      user: { ...user },
+      currentDrawId: String(currentDrawId.value || ''),
+      user: { name: authStore.user?.display_name || '', handle: authStore.user?.handle || '' },
     };
   }
-
-  function importSnapshot(snapshot: QuestStoreSnapshot) {
-    applySnapshot(normalizeQuestSnapshot(snapshot));
-    return persist();
+  function importSnapshot(snapshot: any) {
+    if (snapshot.preferences) {
+      Object.assign(preferences, snapshot.preferences);
+      localStorage.setItem('eoj_preferences', JSON.stringify(preferences));
+    }
   }
 
-  function applySnapshot(snapshot: QuestStoreSnapshot) {
-    pools.value = snapshot.pools;
-    tasks.value = snapshot.tasks;
-    accepted.value = snapshot.accepted;
-    Object.assign(preferences, snapshot.preferences);
-    Object.assign(user, snapshot.user);
-    currentDrawId.value = snapshot.currentDrawId;
-  }
-
-  function persist() {
-    return saveQuestSnapshot({
-      pools: pools.value,
-      tasks: tasks.value,
-      accepted: accepted.value,
-      preferences: { ...preferences },
-      currentDrawId: currentDrawId.value,
-      user: { ...user },
-    });
+  // ---- 加载本地偏好 ----
+  const savedPrefs = localStorage.getItem('eoj_preferences');
+  if (savedPrefs) {
+    try {
+      const parsed = JSON.parse(savedPrefs);
+      Object.assign(preferences, parsed);
+    } catch {}
   }
 
   return {
-    pools,
     tasks,
     accepted,
     preferences,
     currentDrawId,
     user,
-    currentPool,
+    pools,
     currentPoolId,
+    currentPool,
     approvedTasks,
     pendingTasks,
     todoQuests,
@@ -281,13 +226,14 @@ export const useQuestStore = defineStore("quests", () => {
     currentDraw,
     userApprovedTasks,
     stats,
+    syncFromServer,
     publishTask,
     approveTask,
     removeTask,
     drawQuest,
     completeQuest,
-    deleteAcceptedQuest,
     returnQuest,
+    deleteAcceptedQuest,
     setLightOnly,
     setDrawAnimation,
     setCurrentPool,
@@ -297,15 +243,3 @@ export const useQuestStore = defineStore("quests", () => {
     importSnapshot,
   };
 });
-
-function uid(prefix: string) {
-  if (window.crypto && typeof window.crypto.randomUUID === "function") {
-    return `${prefix}-${window.crypto.randomUUID()}`;
-  }
-
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function normalizeTaskText(text: string) {
-  return text.trim().replace(/\s+/g, " ").toLowerCase();
-}
