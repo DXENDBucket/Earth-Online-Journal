@@ -52,6 +52,27 @@ describe("questStore", () => {
     expect(store.doneQuests[0]?.photoName).toBe("light.jpg");
   });
 
+  it("switches between the public pool and an empty private pool", () => {
+    const store = useQuestStore();
+
+    expect(store.currentPool.name).toBe("公共池");
+    expect(store.approvedTasks.length).toBeGreaterThan(0);
+    expect(store.setCurrentPool("private")).toBe(true);
+    expect(store.currentPool.name).toBe("私人池");
+    expect(store.approvedTasks).toHaveLength(0);
+    expect(store.drawQuest().status).toBe("empty");
+
+    const created = store.publishTask({
+      text: "Write a secret mission for myself",
+      category: "记录",
+      intensity: "light",
+    });
+
+    expect(created.status).toBe("created");
+    expect(created.status === "created" ? created.task.poolId : "").toBe("private");
+    expect(store.pendingTasks).toHaveLength(1);
+  });
+
   it("returns storage-error when a change cannot be saved", () => {
     const listener = vi.fn();
     window.addEventListener(QUEST_STORAGE_ERROR_EVENT, listener);

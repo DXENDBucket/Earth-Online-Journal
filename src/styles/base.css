@@ -432,6 +432,11 @@ h3 {
   padding: 13px;
 }
 
+.list-card.is-selected {
+  border-color: rgba(55, 169, 107, 0.42);
+  background: #f4fff7;
+}
+
 .list-card p {
   margin-bottom: 0;
   line-height: 1.45;

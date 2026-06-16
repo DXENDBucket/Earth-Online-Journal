@@ -18,6 +18,7 @@ describe("localQuestStorage", () => {
     snapshot.accepted = [
       {
         id: "accepted-test",
+        poolId: "public",
         taskId: "task-test",
         text: "Write down one good thing from today",
         category: "记录",
@@ -49,5 +50,54 @@ describe("localQuestStorage", () => {
     });
 
     window.removeEventListener(QUEST_STORAGE_ERROR_EVENT, listener);
+  });
+
+  it("migrates older snapshots into the public pool", () => {
+    localStorage.setItem(
+      "earth-online-journal-v1",
+      JSON.stringify({
+        tasks: [
+          {
+            id: "old-task",
+            text: "An older task",
+            category: "记录",
+            intensity: "light",
+            status: "approved",
+            source: "旧记录",
+            createdAt: 1,
+          },
+        ],
+        accepted: [
+          {
+            id: "old-accepted",
+            taskId: "old-task",
+            text: "An older task",
+            category: "记录",
+            source: "旧记录",
+            status: "todo",
+            acceptedAt: 2,
+            completedAt: null,
+            reflection: "",
+            photoName: "",
+            photoDataUrl: "",
+          },
+        ],
+        preferences: {
+          lightOnly: false,
+        },
+        currentDrawId: "",
+        user: {
+          name: "Old User",
+          handle: "OLD",
+        },
+      }),
+    );
+
+    const loaded = loadQuestSnapshot();
+
+    expect(loaded.pools.map((pool) => pool.id)).toEqual(["public", "private"]);
+    expect(loaded.preferences.selectedPoolId).toBe("public");
+    expect(loaded.tasks.find((task) => task.id === "old-task")?.poolId).toBe("public");
+    expect(loaded.accepted[0]?.poolId).toBe("public");
   });
 });

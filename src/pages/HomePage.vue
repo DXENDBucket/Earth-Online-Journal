@@ -4,7 +4,7 @@
       <div class="hero-copy">
         <p class="eyebrow">Earth Online Journal</p>
         <h1>给今天抽一张现实任务</h1>
-        <p class="hero-line">把日常生活当作开放地图，接住一个小小的行动提示。</p>
+        <p class="hero-line">当前卡池：{{ currentPool.name }}。把日常生活当作开放地图，接住一个小小的行动提示。</p>
         <div class="metric-row">
           <div class="metric">
             <strong>{{ drawPool.length }}</strong>
@@ -170,6 +170,7 @@ const store = useQuestStore();
 const notice = useNoticeStore();
 const {
   approvedTasks,
+  currentPool,
   pendingTasks,
   drawPool,
   currentDraw,

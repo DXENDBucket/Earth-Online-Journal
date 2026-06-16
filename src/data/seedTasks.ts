@@ -5,6 +5,7 @@ const baseTime = Date.now();
 export const seedTasks: QuestTask[] = [
   {
     id: "seed-1",
+    poolId: "public",
     text: "给今天路过的一棵树拍一张证件照。",
     category: "观察",
     intensity: "light",
@@ -14,6 +15,7 @@ export const seedTasks: QuestTask[] = [
   },
   {
     id: "seed-2",
+    poolId: "public",
     text: "找一个平时会忽略的小物件，给它写三句话。",
     category: "记录",
     intensity: "light",
@@ -23,6 +25,7 @@ export const seedTasks: QuestTask[] = [
   },
   {
     id: "seed-3",
+    poolId: "public",
     text: "在熟悉的路上换一侧行走，记录一个新发现。",
     category: "行动",
     intensity: "light",
@@ -32,6 +35,7 @@ export const seedTasks: QuestTask[] = [
   },
   {
     id: "seed-4",
+    poolId: "public",
     text: "给未来三天后的自己留一句提醒。",
     category: "记录",
     intensity: "light",
@@ -41,6 +45,7 @@ export const seedTasks: QuestTask[] = [
   },
   {
     id: "seed-5",
+    poolId: "public",
     text: "买一瓶平时不会选的饮料，并给它打一个分数。",
     category: "尝试",
     intensity: "normal",
@@ -50,6 +55,7 @@ export const seedTasks: QuestTask[] = [
   },
   {
     id: "seed-6",
+    poolId: "public",
     text: "向一个陌生空间打招呼：车站、街角、楼梯间都可以。",
     category: "探索",
     intensity: "normal",

@@ -54,9 +54,10 @@ describe("App smoke flow", () => {
     await router.push({ name: "pool" });
     await flushPromises();
 
-    expect(wrapper.text()).toContain("任务卡池");
-    expect(wrapper.text()).toContain("全部任务");
-    expect(wrapper.text()).toContain("可抽任务");
+    expect(wrapper.text()).toContain("卡池选择");
+    expect(wrapper.text()).toContain("公共池");
+    expect(wrapper.text()).toContain("私人池");
+    expect(wrapper.text()).toContain("公共池里的任务");
 
     await router.push({ name: "journal" });
     await flushPromises();

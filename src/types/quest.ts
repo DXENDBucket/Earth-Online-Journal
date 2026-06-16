@@ -1,9 +1,19 @@
 export type QuestApprovalStatus = "approved" | "pending";
 export type QuestIntensity = "light" | "normal";
 export type AcceptedQuestStatus = "todo" | "done";
+export type QuestPoolKind = "public" | "private";
+
+export interface QuestPool {
+  id: string;
+  name: string;
+  description: string;
+  kind: QuestPoolKind;
+  createdAt: number;
+}
 
 export interface QuestTask {
   id: string;
+  poolId: string;
   text: string;
   category: string;
   intensity: QuestIntensity;
@@ -15,6 +25,7 @@ export interface QuestTask {
 
 export interface AcceptedQuest {
   id: string;
+  poolId: string;
   taskId: string;
   text: string;
   category: string;
@@ -29,6 +40,7 @@ export interface AcceptedQuest {
 
 export interface QuestPreferences {
   lightOnly: boolean;
+  selectedPoolId: string;
 }
 
 export interface UserProfile {

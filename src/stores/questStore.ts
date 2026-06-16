@@ -5,6 +5,7 @@ import {
   clearQuestSnapshot,
   createInitialSnapshot,
   loadQuestSnapshot,
+  normalizeQuestSnapshot,
   saveQuestSnapshot,
 } from "@/services/localQuestStorage";
 import type { QuestStoreSnapshot } from "@/services/localQuestStorage";
@@ -15,6 +16,7 @@ import type {
   PublishQuestPayload,
   PublishQuestResult,
   QuestPreferences,
+  QuestPool,
   QuestTask,
   UserProfile,
 } from "@/types/quest";
@@ -22,16 +24,25 @@ import type {
 export const useQuestStore = defineStore("quests", () => {
   const snapshot = loadQuestSnapshot();
 
+  const pools = ref<QuestPool[]>(snapshot.pools);
   const tasks = ref<QuestTask[]>(snapshot.tasks);
   const accepted = ref<AcceptedQuest[]>(snapshot.accepted);
   const preferences = reactive<QuestPreferences>(snapshot.preferences);
   const currentDrawId = ref(snapshot.currentDrawId);
   const user = reactive<UserProfile>(snapshot.user);
 
-  const approvedTasks = computed(() => tasks.value.filter((task) => task.status === "approved"));
-  const pendingTasks = computed(() => tasks.value.filter((task) => task.status === "pending"));
-  const todoQuests = computed(() => accepted.value.filter((quest) => quest.status === "todo"));
-  const doneQuests = computed(() => accepted.value.filter((quest) => quest.status === "done"));
+  const currentPool = computed(() => {
+    return pools.value.find((pool) => pool.id === preferences.selectedPoolId) || pools.value[0];
+  });
+  const currentPoolId = computed(() => currentPool.value.id);
+  const tasksInCurrentPool = computed(() => tasks.value.filter((task) => task.poolId === currentPoolId.value));
+  const acceptedInCurrentPool = computed(() =>
+    accepted.value.filter((quest) => quest.poolId === currentPoolId.value),
+  );
+  const approvedTasks = computed(() => tasksInCurrentPool.value.filter((task) => task.status === "approved"));
+  const pendingTasks = computed(() => tasksInCurrentPool.value.filter((task) => task.status === "pending"));
+  const todoQuests = computed(() => acceptedInCurrentPool.value.filter((quest) => quest.status === "todo"));
+  const doneQuests = computed(() => acceptedInCurrentPool.value.filter((quest) => quest.status === "done"));
   const activeTaskIds = computed(() => new Set(todoQuests.value.map((quest) => quest.taskId)));
 
   const drawPool = computed(() =>
@@ -46,7 +57,7 @@ export const useQuestStore = defineStore("quests", () => {
   });
 
   const userApprovedTasks = computed(() =>
-    tasks.value.filter((task) => task.source === "用户发布" && task.status === "approved"),
+    tasksInCurrentPool.value.filter((task) => task.source === "用户发布" && task.status === "approved"),
   );
 
   const stats = computed(() => ({
@@ -70,6 +81,7 @@ export const useQuestStore = defineStore("quests", () => {
 
     const task: QuestTask = {
       id: uid("task"),
+      poolId: currentPoolId.value,
       text,
       category: payload.category,
       intensity: payload.intensity,
@@ -118,6 +130,7 @@ export const useQuestStore = defineStore("quests", () => {
     const picked = drawPool.value[Math.floor(Math.random() * drawPool.value.length)];
     const quest: AcceptedQuest = {
       id: uid("accepted"),
+      poolId: picked.poolId,
       taskId: picked.id,
       text: picked.text,
       category: picked.category,
@@ -187,6 +200,16 @@ export const useQuestStore = defineStore("quests", () => {
     return persist();
   }
 
+  function setCurrentPool(poolId: string) {
+    if (!pools.value.some((pool) => pool.id === poolId)) {
+      return false;
+    }
+
+    preferences.selectedPoolId = poolId;
+    currentDrawId.value = todoQuests.value[0]?.id || "";
+    return persist();
+  }
+
   function updateUserProfile(nextUser: UserProfile) {
     user.name = nextUser.name.trim() || "地球旅人";
     user.handle = nextUser.handle.trim() || "EOJ-2049";
@@ -202,6 +225,7 @@ export const useQuestStore = defineStore("quests", () => {
 
   function getSnapshot(): QuestStoreSnapshot {
     return {
+      pools: pools.value,
       tasks: tasks.value,
       accepted: accepted.value,
       preferences: { ...preferences },
@@ -211,11 +235,12 @@ export const useQuestStore = defineStore("quests", () => {
   }
 
   function importSnapshot(snapshot: QuestStoreSnapshot) {
-    applySnapshot(snapshot);
+    applySnapshot(normalizeQuestSnapshot(snapshot));
     return persist();
   }
 
   function applySnapshot(snapshot: QuestStoreSnapshot) {
+    pools.value = snapshot.pools;
     tasks.value = snapshot.tasks;
     accepted.value = snapshot.accepted;
     Object.assign(preferences, snapshot.preferences);
@@ -225,6 +250,7 @@ export const useQuestStore = defineStore("quests", () => {
 
   function persist() {
     return saveQuestSnapshot({
+      pools: pools.value,
       tasks: tasks.value,
       accepted: accepted.value,
       preferences: { ...preferences },
@@ -234,11 +260,14 @@ export const useQuestStore = defineStore("quests", () => {
   }
 
   return {
+    pools,
     tasks,
     accepted,
     preferences,
     currentDrawId,
     user,
+    currentPool,
+    currentPoolId,
     approvedTasks,
     pendingTasks,
     todoQuests,
@@ -255,6 +284,7 @@ export const useQuestStore = defineStore("quests", () => {
     deleteAcceptedQuest,
     returnQuest,
     setLightOnly,
+    setCurrentPool,
     updateUserProfile,
     clearLocalProgress,
     getSnapshot,

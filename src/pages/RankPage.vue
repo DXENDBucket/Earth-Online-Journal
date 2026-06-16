@@ -3,7 +3,7 @@
     <div class="screen-title">
       <p class="eyebrow">榜单</p>
       <h1>本周回顾</h1>
-      <p>把已经完成的现实任务，整理成自己的进度和足迹。</p>
+      <p>当前卡池：{{ store.currentPool.name }}。这里会整理这个卡池里的进度和足迹。</p>
     </div>
 
     <section class="profile-panel">
