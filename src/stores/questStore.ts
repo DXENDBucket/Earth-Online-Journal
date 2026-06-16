@@ -30,9 +30,13 @@ export const useQuestStore = defineStore("quests", () => {
   const pendingTasks = computed(() => tasks.value.filter((task) => task.status === "pending"));
   const todoQuests = computed(() => accepted.value.filter((quest) => quest.status === "todo"));
   const doneQuests = computed(() => accepted.value.filter((quest) => quest.status === "done"));
+  const activeTaskIds = computed(() => new Set(todoQuests.value.map((quest) => quest.taskId)));
 
   const drawPool = computed(() =>
-    approvedTasks.value.filter((task) => !preferences.lightOnly || task.intensity === "light"),
+    approvedTasks.value.filter((task) => {
+      const matchesPreference = !preferences.lightOnly || task.intensity === "light";
+      return matchesPreference && !activeTaskIds.value.has(task.id);
+    }),
   );
 
   const currentDraw = computed(() => {

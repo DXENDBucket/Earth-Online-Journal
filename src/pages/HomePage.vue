@@ -7,7 +7,7 @@
         <p class="hero-line">把日常生活当作开放地图，接住一个小小的行动提示。</p>
         <div class="metric-row">
           <div class="metric">
-            <strong>{{ stats.approved }}</strong>
+            <strong>{{ drawPool.length }}</strong>
             <span>可抽任务</span>
           </div>
           <div class="metric">
@@ -226,7 +226,10 @@ function drawQuest() {
   const quest = store.drawQuest();
 
   if (!quest) {
-    notice.showNotice("当前没有可抽取的任务卡。", "warning");
+    const message = approvedTasks.value.length
+      ? "可抽任务都在进行中，完成或放回一个后再抽。"
+      : "当前没有可抽取的任务卡。";
+    notice.showNotice(message, "warning");
     return;
   }
 
